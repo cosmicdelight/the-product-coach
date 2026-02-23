@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '../components/DashboardLayout';
+import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { ProposalWithProfile, ProposalStatus } from '../types/database';
 import {
   FileText, Clock, CheckCircle, AlertCircle, XCircle,
   TrendingUp, ArrowRight, Calendar, ChevronRight, Plus,
+  UserCheck, UserX, Lock,
 } from 'lucide-react';
 
 interface EventSummary {
@@ -16,10 +18,13 @@ interface EventSummary {
 }
 
 export function OrganizerDashboard() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [proposals, setProposals] = useState<ProposalWithProfile[]>([]);
   const [events, setEvents] = useState<EventSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<ProposalStatus | 'all'>('all');
+  const [claiming, setClaiming] = useState<string | null>(null);
 
   useEffect(() => { loadData(); }, []);
 
@@ -54,7 +59,33 @@ export function OrganizerDashboard() {
     setEvents(mapped);
   };
 
+  const claimProposal = async (proposal: ProposalWithProfile) => {
+    if (!user) return;
+    setClaiming(proposal.id);
+    try {
+      await supabase
+        .from('proposals')
+        .update({ status: 'under_review', assigned_reviewer_id: user.id })
+        .eq('id', proposal.id);
+
+      await supabase.from('approval_workflow').insert({
+        proposal_id: proposal.id,
+        from_status: proposal.status,
+        to_status: 'under_review',
+        changed_by: user.id,
+        reason: 'Claimed for review',
+      });
+
+      navigate(`/proposals/${proposal.id}/review`);
+    } catch (e) {
+      console.error(e);
+      setClaiming(null);
+    }
+  };
+
   const filtered = filter === 'all' ? proposals : proposals.filter(p => p.status === filter);
+
+  const claimedByMe = proposals.filter(p => p.assigned_reviewer_id === user?.id).length;
 
   const counts = {
     all: proposals.length,
@@ -105,7 +136,7 @@ export function OrganizerDashboard() {
           {[
             { label: 'Total Submissions', value: proposals.length, icon: <FileText className="h-5 w-5 text-blue-600" />, bg: 'bg-blue-50' },
             { label: 'Needs Review', value: counts.submitted + counts.under_review, icon: <Clock className="h-5 w-5 text-orange-600" />, bg: 'bg-orange-50' },
-            { label: 'Approved', value: counts.approved, icon: <CheckCircle className="h-5 w-5 text-green-600" />, bg: 'bg-green-50' },
+            { label: 'Claimed by Me', value: claimedByMe, icon: <UserCheck className="h-5 w-5 text-teal-600" />, bg: 'bg-teal-50' },
             { label: 'Avg Quality', value: `${avgScore}%`, icon: <TrendingUp className="h-5 w-5 text-blue-600" />, bg: 'bg-blue-50' },
           ].map(({ label, value, icon, bg }) => (
             <div key={label} className="bg-white rounded-xl border border-gray-200 p-5">
@@ -217,44 +248,95 @@ export function OrganizerDashboard() {
           </div>
         ) : (
           <div className="grid gap-4">
-            {filtered.map(proposal => (
-              <Link
-                key={proposal.id}
-                to={`/proposals/${proposal.id}/review`}
-                className="bg-white rounded-2xl border border-gray-200 p-6 hover:shadow-md transition-shadow group"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-1.5">
-                      <h3 className="text-base font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
-                        {proposal.title || 'Untitled Proposal'}
-                      </h3>
-                      {getStatusBadge(proposal.status)}
+            {filtered.map(proposal => {
+              const isMyClaim = proposal.assigned_reviewer_id === user?.id;
+              const isClaimedByOther = proposal.status === 'under_review' && proposal.assigned_reviewer_id && !isMyClaim;
+              const isUnclaimedSubmitted = proposal.status === 'submitted' && !proposal.assigned_reviewer_id;
+
+              return (
+                <div key={proposal.id} className="bg-white rounded-2xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 mb-1.5 flex-wrap">
+                        <h3 className="text-base font-semibold text-gray-900 truncate">
+                          {proposal.title || 'Untitled Proposal'}
+                        </h3>
+                        {getStatusBadge(proposal.status)}
+                        {isMyClaim && (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-50 text-teal-700 border border-teal-100">
+                            <UserCheck className="h-3 w-3" />Claimed by you
+                          </span>
+                        )}
+                        {isClaimedByOther && (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+                            <Lock className="h-3 w-3" />Claimed
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500 mb-2">
+                        by {proposal.profile?.full_name} · {proposal.profile?.organization || 'No organisation'}
+                      </p>
+                      <p className="text-sm text-gray-600 line-clamp-1">
+                        {proposal.problem_statement || 'No problem statement'}
+                      </p>
                     </div>
-                    <p className="text-xs text-gray-500 mb-2">
-                      by {proposal.profile?.full_name} · {proposal.profile?.organization || 'No organisation'}
-                    </p>
-                    <p className="text-sm text-gray-600 line-clamp-1">
-                      {proposal.problem_statement || 'No problem statement'}
-                    </p>
+
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {isUnclaimedSubmitted && (
+                        <button
+                          onClick={() => claimProposal(proposal)}
+                          disabled={claiming === proposal.id}
+                          className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50"
+                        >
+                          <UserCheck className="h-4 w-4" />
+                          {claiming === proposal.id ? 'Claiming...' : 'Claim for Review'}
+                        </button>
+                      )}
+                      {isMyClaim && (
+                        <Link
+                          to={`/proposals/${proposal.id}/review`}
+                          className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-colors"
+                        >
+                          Review <ArrowRight className="h-4 w-4" />
+                        </Link>
+                      )}
+                      {!isUnclaimedSubmitted && !isMyClaim && !isClaimedByOther && (
+                        <Link
+                          to={`/proposals/${proposal.id}/review`}
+                          className="flex items-center gap-1.5 px-4 py-2 border border-gray-200 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors"
+                        >
+                          View <ArrowRight className="h-4 w-4" />
+                        </Link>
+                      )}
+                      {isClaimedByOther && (
+                        <span className="flex items-center gap-1.5 px-4 py-2 bg-gray-50 text-gray-400 text-sm rounded-xl border border-gray-200 cursor-not-allowed">
+                          <UserX className="h-4 w-4" />In Review
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <ArrowRight className="h-5 w-5 text-gray-300 group-hover:text-blue-500 flex-shrink-0 mt-1 transition-colors" />
-                </div>
-                <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100 text-xs text-gray-400">
-                  <div className="flex items-center gap-4">
-                    {proposal.quality_score > 0 && (
-                      <span className="flex items-center gap-1">
-                        <TrendingUp className="h-3 w-3" />Quality: {proposal.quality_score}%
-                      </span>
+
+                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100 text-xs text-gray-400">
+                    <div className="flex items-center gap-4">
+                      {proposal.quality_score > 0 && (
+                        <span className="flex items-center gap-1">
+                          <TrendingUp className="h-3 w-3" />Quality: {proposal.quality_score}%
+                        </span>
+                      )}
+                      {proposal.submitted_at && (
+                        <span>Submitted {new Date(proposal.submitted_at).toLocaleDateString()}</span>
+                      )}
+                    </div>
+                    {isMyClaim && (
+                      <span className="text-teal-600 font-medium">Continue reviewing →</span>
                     )}
-                    {proposal.submitted_at && (
-                      <span>Submitted {new Date(proposal.submitted_at).toLocaleDateString()}</span>
+                    {isUnclaimedSubmitted && (
+                      <span className="text-blue-500 font-medium">Available to claim</span>
                     )}
                   </div>
-                  <span className="text-blue-600 font-medium">Review →</span>
                 </div>
-              </Link>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

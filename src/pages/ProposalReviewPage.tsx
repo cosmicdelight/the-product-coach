@@ -4,7 +4,10 @@ import { DashboardLayout } from '../components/DashboardLayout';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { Proposal, ProposalSection, Profile } from '../types/database';
-import { CheckCircle, XCircle, AlertCircle, TrendingUp, ChevronDown, ChevronUp, ArrowLeft } from 'lucide-react';
+import {
+  AlertCircle, TrendingUp, ChevronDown, ChevronUp, ArrowLeft,
+  UserCheck, UserX, AlertTriangle,
+} from 'lucide-react';
 
 export function ProposalReviewPage() {
   const { id } = useParams();
@@ -16,14 +19,17 @@ export function ProposalReviewPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
   const [revisionModal, setRevisionModal] = useState(false);
   const [revisionNotes, setRevisionNotes] = useState('');
+  const [unassignModal, setUnassignModal] = useState(false);
 
   const [overallScore, setOverallScore] = useState(75);
   const [feasibilityScore, setFeasibilityScore] = useState(75);
   const [impactScore, setImpactScore] = useState(75);
   const [innovationScore, setInnovationScore] = useState(75);
   const [reviewNotes, setReviewNotes] = useState('');
+  const [scoresModified, setScoresModified] = useState(false);
 
   useEffect(() => { if (id) load(); }, [id]);
 
@@ -36,12 +42,32 @@ export function ProposalReviewPage() {
       setOwner(o);
       const { data: s } = await supabase.from('proposal_sections').select('*').eq('proposal_id', id);
       setSections(s || []);
+
+      const { data: existingReview } = await supabase
+        .from('proposal_reviews')
+        .select('*')
+        .eq('proposal_id', id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (existingReview) {
+        if (existingReview.overall_score != null) setOverallScore(existingReview.overall_score);
+        if (existingReview.feasibility_score != null) setFeasibilityScore(existingReview.feasibility_score);
+        if (existingReview.impact_score != null) setImpactScore(existingReview.impact_score);
+        if (existingReview.innovation_score != null) setInnovationScore(existingReview.innovation_score);
+        if (existingReview.review_notes) setReviewNotes(existingReview.review_notes);
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDecision = async (decision: 'approved' | 'rejected' | 'revision_requested', notes?: string) => {
+  const isMyClaim = proposal?.assigned_reviewer_id === user?.id;
+  const isClaimedByOther = proposal?.status === 'under_review' && proposal.assigned_reviewer_id && !isMyClaim;
+  const hasUnsavedWork = scoresModified || reviewNotes.trim().length > 0;
+
+  const handleRequestEdits = async (notes: string) => {
     if (!id || !user || !proposal) return;
     setSubmitting(true);
     try {
@@ -54,31 +80,30 @@ export function ProposalReviewPage() {
         feasibility_score: feasibilityScore,
         impact_score: impactScore,
         innovation_score: innovationScore,
-        decision,
+        decision: 'revision_requested',
         review_notes: reviewNotes,
       });
 
       await supabase.from('proposals').update({
-        status: decision,
+        status: 'revision_requested',
         reviewed_at: new Date().toISOString(),
         quality_score: avgScore,
+        assigned_reviewer_id: null,
       }).eq('id', id);
 
       await supabase.from('approval_workflow').insert({
         proposal_id: id,
         from_status: proposal.status,
-        to_status: decision,
+        to_status: 'revision_requested',
         changed_by: user.id,
-        reason: reviewNotes || notes,
+        reason: notes,
       });
 
-      if (decision === 'revision_requested' && notes) {
-        await supabase.from('comments').insert({
-          proposal_id: id,
-          user_id: user.id,
-          content: `**Revisions Requested:**\n\n${notes}`,
-        });
-      }
+      await supabase.from('comments').insert({
+        proposal_id: id,
+        user_id: user.id,
+        content: `**Revisions Requested:**\n\n${notes}`,
+      });
 
       const { data: collabs } = await supabase
         .from('proposal_collaborators')
@@ -91,16 +116,13 @@ export function ProposalReviewPage() {
         .filter((uid: string) => uid && uid !== proposal.user_id);
 
       const notifyUserIds = [proposal.user_id, ...collaboratorIds];
-      const notificationType = decision === 'approved' ? 'approval' : decision === 'rejected' ? 'rejection' : 'revision_request';
-      const decisionLabel = decision === 'approved' ? 'Approved' : decision === 'rejected' ? 'Rejected' : 'Revision Requested';
-
       if (notifyUserIds.length > 0) {
         await supabase.from('notifications').insert(
           notifyUserIds.map(uid => ({
             user_id: uid,
-            type: notificationType,
-            title: `Proposal ${decisionLabel}`,
-            message: `"${proposal.title}" has been ${decision.replace(/_/g, ' ')}.${decision === 'revision_requested' ? ' Revisions have been requested.' : ''}`,
+            type: 'revision_request',
+            title: 'Revisions Requested',
+            message: `"${proposal.title}" has been returned for revisions.`,
             link: `/proposals/${id}`,
             read: false,
           }))
@@ -110,6 +132,30 @@ export function ProposalReviewPage() {
       navigate('/organizer/dashboard');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleUnassign = async () => {
+    if (!id || !user || !proposal) return;
+    setSubmitting(true);
+    try {
+      await supabase.from('proposals').update({
+        status: 'submitted',
+        assigned_reviewer_id: null,
+      }).eq('id', id);
+
+      await supabase.from('approval_workflow').insert({
+        proposal_id: id,
+        from_status: proposal.status,
+        to_status: 'submitted',
+        changed_by: user.id,
+        reason: 'Returned to pool by reviewer',
+      });
+
+      navigate('/organizer/dashboard');
+    } finally {
+      setSubmitting(false);
+      setUnassignModal(false);
     }
   };
 
@@ -124,8 +170,18 @@ export function ProposalReviewPage() {
   const getSectionTitle = (t: string) => t.split('_').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
   const avgScore = Math.round((overallScore + feasibilityScore + impactScore + innovationScore) / 4);
 
-  if (loading) return <DashboardLayout><div className="flex justify-center py-16"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" /></div></DashboardLayout>;
-  if (!proposal) return <DashboardLayout><div className="text-center py-16 text-gray-500">Proposal not found.</div></DashboardLayout>;
+  if (loading) return (
+    <DashboardLayout>
+      <div className="flex justify-center py-16">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" />
+      </div>
+    </DashboardLayout>
+  );
+  if (!proposal) return (
+    <DashboardLayout>
+      <div className="text-center py-16 text-gray-500">Proposal not found.</div>
+    </DashboardLayout>
+  );
 
   return (
     <DashboardLayout>
@@ -137,47 +193,80 @@ export function ProposalReviewPage() {
         </div>
 
         <div className="bg-white rounded-2xl border border-gray-200 p-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-1">{proposal.title}</h1>
-          <p className="text-sm text-gray-500">by {owner?.full_name} • Submitted {proposal.submitted_at ? new Date(proposal.submitted_at).toLocaleDateString() : 'N/A'}</p>
-        </div>
-
-        <div className="grid lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-5">
-            <h2 className="font-bold text-gray-900">Scoring</h2>
-            {[
-              { label: 'Overall Quality', value: overallScore, set: setOverallScore, color: 'blue' },
-              { label: 'Feasibility', value: feasibilityScore, set: setFeasibilityScore, color: 'green' },
-              { label: 'Impact', value: impactScore, set: setImpactScore, color: 'orange' },
-              { label: 'Innovation', value: innovationScore, set: setInnovationScore, color: 'teal' },
-            ].map(({ label, value, set }) => (
-              <div key={label}>
-                <div className="flex justify-between mb-1.5">
-                  <span className="text-sm font-medium text-gray-700">{label}</span>
-                  <span className="text-sm font-bold text-gray-900">{value}%</span>
-                </div>
-                <input type="range" min="0" max="100" value={value} onChange={e => set(Number(e.target.value))} className="w-full accent-blue-600" />
-              </div>
-            ))}
-            <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
-              <span className="font-semibold text-gray-900">Average Score</span>
-              <div className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-blue-600" />
-                <span className="text-2xl font-bold text-blue-600">{avgScore}%</span>
-              </div>
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 mb-1">{proposal.title}</h1>
+              <p className="text-sm text-gray-500">
+                by {owner?.full_name} · Submitted {proposal.submitted_at ? new Date(proposal.submitted_at).toLocaleDateString() : 'N/A'}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              {isMyClaim && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium bg-teal-50 text-teal-700 border border-teal-100">
+                  <UserCheck className="h-4 w-4" />Claimed by you
+                </span>
+              )}
+              {isClaimedByOther && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium bg-orange-50 text-orange-700 border border-orange-100">
+                  <AlertCircle className="h-4 w-4" />Being reviewed by another organiser
+                </span>
+              )}
             </div>
           </div>
-
-          <div className="bg-white rounded-2xl border border-gray-200 p-6">
-            <h2 className="font-bold text-gray-900 mb-4">Review Notes</h2>
-            <textarea
-              value={reviewNotes}
-              onChange={e => setReviewNotes(e.target.value)}
-              rows={6}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-none"
-              placeholder="Overall observations, strengths, and general feedback..."
-            />
-          </div>
         </div>
+
+        {isClaimedByOther && (
+          <div className="bg-orange-50 border border-orange-100 rounded-2xl p-5 flex items-center gap-3">
+            <AlertCircle className="h-5 w-5 text-orange-500 flex-shrink-0" />
+            <p className="text-sm text-orange-800">
+              This proposal is currently being reviewed by another organiser. You can read the content below, but the scoring and decision panel is not available.
+            </p>
+          </div>
+        )}
+
+        {isMyClaim && (
+          <div className="grid lg:grid-cols-2 gap-6">
+            <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-5">
+              <h2 className="font-bold text-gray-900">Scoring</h2>
+              {[
+                { label: 'Overall Quality', value: overallScore, set: setOverallScore },
+                { label: 'Feasibility', value: feasibilityScore, set: setFeasibilityScore },
+                { label: 'Impact', value: impactScore, set: setImpactScore },
+                { label: 'Innovation', value: innovationScore, set: setInnovationScore },
+              ].map(({ label, value, set }) => (
+                <div key={label}>
+                  <div className="flex justify-between mb-1.5">
+                    <span className="text-sm font-medium text-gray-700">{label}</span>
+                    <span className="text-sm font-bold text-gray-900">{value}%</span>
+                  </div>
+                  <input
+                    type="range" min="0" max="100" value={value}
+                    onChange={e => { set(Number(e.target.value)); setScoresModified(true); }}
+                    className="w-full accent-blue-600"
+                  />
+                </div>
+              ))}
+              <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
+                <span className="font-semibold text-gray-900">Average Score</span>
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-blue-600" />
+                  <span className="text-2xl font-bold text-blue-600">{avgScore}%</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-gray-200 p-6">
+              <h2 className="font-bold text-gray-900 mb-4">Review Notes</h2>
+              <textarea
+                value={reviewNotes}
+                onChange={e => setReviewNotes(e.target.value)}
+                rows={6}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-none"
+                placeholder="Overall observations, strengths, and general feedback..."
+              />
+            </div>
+          </div>
+        )}
 
         <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
           <div className="p-5 border-b border-gray-100">
@@ -208,43 +297,36 @@ export function ProposalReviewPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl border border-gray-200 p-6">
-          <h2 className="font-bold text-gray-900 mb-5">Make a Decision</h2>
-          <div className="grid grid-cols-3 gap-4">
-            <button
-              onClick={() => handleDecision('approved')}
-              disabled={submitting}
-              className="flex flex-col items-center gap-3 p-5 border-2 border-green-200 bg-green-50 rounded-xl hover:bg-green-100 transition-colors disabled:opacity-40"
-            >
-              <CheckCircle className="h-8 w-8 text-green-600" />
-              <span className="font-semibold text-green-900 text-sm">Approve</span>
-            </button>
+        {isMyClaim && (
+          <div className="bg-white rounded-2xl border border-gray-200 p-6">
+            <h2 className="font-bold text-gray-900 mb-5">Actions</h2>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={() => setRevisionModal(true)}
+                disabled={submitting}
+                className="flex-1 flex items-center justify-center gap-2 p-4 border-2 border-yellow-200 bg-yellow-50 rounded-xl hover:bg-yellow-100 transition-colors disabled:opacity-40"
+              >
+                <AlertCircle className="h-5 w-5 text-yellow-600" />
+                <span className="font-semibold text-yellow-900 text-sm">Request Edits</span>
+              </button>
 
-            <button
-              onClick={() => setRevisionModal(true)}
-              disabled={submitting}
-              className="flex flex-col items-center gap-3 p-5 border-2 border-yellow-200 bg-yellow-50 rounded-xl hover:bg-yellow-100 transition-colors disabled:opacity-40"
-            >
-              <AlertCircle className="h-8 w-8 text-yellow-600" />
-              <span className="font-semibold text-yellow-900 text-sm">Request Revisions</span>
-            </button>
-
-            <button
-              onClick={() => handleDecision('rejected')}
-              disabled={submitting}
-              className="flex flex-col items-center gap-3 p-5 border-2 border-red-200 bg-red-50 rounded-xl hover:bg-red-100 transition-colors disabled:opacity-40"
-            >
-              <XCircle className="h-8 w-8 text-red-600" />
-              <span className="font-semibold text-red-900 text-sm">Reject</span>
-            </button>
+              <button
+                onClick={() => setUnassignModal(true)}
+                disabled={submitting}
+                className="flex-1 flex items-center justify-center gap-2 p-4 border-2 border-gray-200 bg-white rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-40"
+              >
+                <UserX className="h-5 w-5 text-gray-500" />
+                <span className="font-semibold text-gray-700 text-sm">Return to Pool</span>
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {revisionModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-lg w-full p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Request Revisions</h3>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Request Edits</h3>
             <p className="text-sm text-gray-500 mb-4">Specify what needs to be changed. This will be posted as a comment visible to the officer.</p>
             <textarea
               value={revisionNotes}
@@ -259,11 +341,57 @@ export function ProposalReviewPage() {
                 Cancel
               </button>
               <button
-                onClick={() => { setRevisionModal(false); handleDecision('revision_requested', revisionNotes); }}
+                onClick={() => { setRevisionModal(false); handleRequestEdits(revisionNotes); }}
                 disabled={!revisionNotes.trim() || submitting}
                 className="flex-1 px-4 py-2.5 bg-yellow-600 text-white rounded-xl text-sm font-semibold hover:bg-yellow-700 disabled:opacity-40"
               >
                 Send Revision Request
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {unassignModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className={`p-2 rounded-xl ${hasUnsavedWork ? 'bg-orange-100' : 'bg-gray-100'}`}>
+                <AlertTriangle className={`h-5 w-5 ${hasUnsavedWork ? 'text-orange-600' : 'text-gray-500'}`} />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Return proposal to pool?</h3>
+            </div>
+
+            {hasUnsavedWork ? (
+              <div className="bg-orange-50 border border-orange-100 rounded-xl p-4 mb-5">
+                <p className="text-sm text-orange-800 font-medium mb-1">You have unsaved scoring or notes</p>
+                <p className="text-sm text-orange-700">
+                  If you proceed, your scoring and notes will not be saved. The proposal will return to the shared pool with a status of "Submitted" and can be claimed by any organiser.
+                </p>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500 mb-5">
+                This proposal will return to the shared pool with a status of "Submitted" and can be claimed by any organiser.
+              </p>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setUnassignModal(false)}
+                className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Keep Reviewing
+              </button>
+              <button
+                onClick={handleUnassign}
+                disabled={submitting}
+                className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50 ${
+                  hasUnsavedWork
+                    ? 'bg-orange-600 text-white hover:bg-orange-700'
+                    : 'bg-gray-800 text-white hover:bg-gray-900'
+                }`}
+              >
+                {submitting ? 'Returning...' : 'Return to Pool'}
               </button>
             </div>
           </div>
