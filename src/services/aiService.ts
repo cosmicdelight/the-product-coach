@@ -8,36 +8,36 @@ interface AIPromptConfig {
 
 const SECTION_PROMPTS: Record<SectionType, AIPromptConfig> = {
   problem_identification: {
-    systemPrompt: 'You are an expert product coach helping Singapore public officers write strong, fundable proposals. Give direct, specific feedback — not generic advice.',
+    systemPrompt: 'You are an expert product coach helping public officers write strong, fundable proposals. Give direct, specific feedback — not generic advice.',
     userPromptTemplate: 'Review these three fields together and give a combined assessment:\n\nProblem Statement: "{input}"\nWho is Affected: "{affectedUsers}"\nCurrent Impact: "{currentImpact}"\n\nAssess: (1) Are the three fields consistent and coherent with each other? (2) Is the impact specific and quantified, or still vague? (3) What is the single most important thing to strengthen? Be concise and specific — point to actual words or phrases that need improvement, not general tips.',
   },
   problem_validation: {
-    systemPrompt: 'You are a GovTech product coach specialising in Singapore public service innovation. Analyse inputs critically, reference public innovation best practices, quantify everything, and suggest evidence-based improvements. Be direct and specific — no generic advice.',
-    userPromptTemplate: 'Critically analyse this Problem Validation submission:\n\nImpact Assessment: "{input}"\nKey Stakeholders: "{stakeholders}"\nExisting Workarounds: "{existingWorkarounds}"\nUrgency & Priority: "{urgency}"\n\nReturn a JSON object with: score (1-10), scoreLabel, strengths (array), redFlags (array), suggestions (array), followUpQuestions (array), nextSteps (array). Be specific to the Singapore public service context.',
+    systemPrompt: 'You are a product coach specialising in public sector innovation. Analyse inputs critically, reference public innovation best practices, quantify everything, and suggest evidence-based improvements. Be direct and specific — no generic advice.',
+    userPromptTemplate: 'Critically analyse this Problem Validation submission:\n\nImpact Assessment: "{input}"\nKey Stakeholders: "{stakeholders}"\nExisting Workarounds: "{existingWorkarounds}"\nUrgency & Priority: "{urgency}"\n\nReturn a JSON object with: score (1-10), scoreLabel, strengths (array), redFlags (array), suggestions (array), followUpQuestions (array), nextSteps (array). Be specific to the public service context.',
   },
   user_research: {
     systemPrompt: 'You are a user research expert.',
     userPromptTemplate: 'Generate 10 user interview questions for this problem: "{input}". Cover pain points, workarounds, and desired outcomes.',
   },
   opportunity_framing: {
-    systemPrompt: 'You are a product design coach specialising in Singapore public sector innovation. Help teams frame problems as design opportunities using the "How Might We" method. Be direct, specific, and grounded in GovTech/Launchpad norms.',
+    systemPrompt: 'You are a product design coach specialising in public sector innovation. Help teams frame problems as design opportunities using the "How Might We" method. Be direct, specific, and grounded in public sector programme norms.',
     userPromptTemplate: 'Review this Opportunity Framing submission:\n\nHow Might We Statement: "{input}"\nRoot Causes: "{rootCauses}"\nOpportunity Scope: "{opportunityScope}"\nDesign Constraints: "{designConstraints}"\n\nReturn a JSON object with: score (1-10), scoreLabel, strengths (array), redFlags (array), suggestions (array), followUpQuestions (array), nextSteps (array). Assess HMW quality, root cause specificity, scope discipline, and constraint awareness.',
   },
   success_definition: {
-    systemPrompt: 'You are a product outcomes coach specialising in Singapore public sector innovation. Help teams define success in terms of user and societal outcomes, not outputs or features. Be direct and specific.',
+    systemPrompt: 'You are a product outcomes coach specialising in public sector innovation. Help teams define success in terms of user and societal outcomes, not outputs or features. Be direct and specific.',
     userPromptTemplate: 'Review this Success Definition submission:\n\nDesired Outcomes: "{input}"\nWhat "Done Well" Looks Like: "{doneWell}"\nEarly Signals of Success: "{earlySignals}"\nExplicitly Out of Scope: "{outOfScope}"\n\nReturn a JSON object with: score (1-10), scoreLabel, strengths (array), redFlags (array), suggestions (array), followUpQuestions (array), nextSteps (array). Assess outcome orientation, observability, measurability, scope discipline, and alignment to problem statement.',
   },
   executive_summary: {
-    systemPrompt: `You are a senior GovTech product coach writing a funding-ready executive summary for public-sector innovation reviewers (e.g., Launchpad, CDB).
+    systemPrompt: `You are a senior product coach writing a funding-ready executive summary for public-sector innovation reviewers.
 
 REFERENCE EXAMPLE — match this tone, sentence rhythm, and level of detail exactly:
 
 ---
-Public officers across the Singapore Public Service often have strong ideas for improving services and internal processes but struggle to turn those ideas into clear, fundable product proposals. Many spend 20–40 hours over several weeks drafting submissions and then rely on about 1.5 days of coaching per hackathon team to get them into shape. This creates a bottleneck for innovation enablers, who must spend significant time fixing proposal basics instead of focusing on which ideas should be backed.
+Public officers across the civil service often have strong ideas for improving services and internal processes but struggle to turn those ideas into clear, fundable product proposals. Many spend 20–40 hours over several weeks drafting submissions and then rely on about 1.5 days of coaching per hackathon team to get them into shape. This creates a bottleneck for innovation enablers, who must spend significant time fixing proposal basics instead of focusing on which ideas should be backed.
 
-This initiative focuses on helping public officers turn rough innovation ideas into well‑structured, evidence‑based product proposals so that promising projects can be funded and scaled across the public service. The initial scope is officers who submit ideas through Launchpad, hackathons, or internal funding calls in 2–3 pilot agencies that run frequent innovation programmes, with the intent to generalise successful patterns to whole‑of‑government. Any solution will need to comply with existing security and data policies (e.g. GovTech/IM8), integrate or coexist with Launchpad, respect officers' limited time through micro‑learning formats, and remain feasible for a small innovation team to maintain.
+This initiative focuses on helping public officers turn rough innovation ideas into well‑structured, evidence‑based product proposals so that promising projects can be funded and scaled across the public service. The initial scope is officers who submit ideas through innovation programmes, hackathons, or internal funding calls in 2–3 pilot agencies that run frequent innovation programmes, with the intent to generalise successful patterns across government. Any solution will need to comply with existing security and data policies, integrate or coexist with current programme tooling, respect officers' limited time through micro‑learning formats, and remain feasible for a small innovation team to maintain.
 
-Success would mean public officers can reliably turn raw ideas into fundable, user‑centred proposals in weeks instead of months, and innovation enablers receive higher‑quality submissions that are faster to review and easier to fund. Early signs that we are on the right track include a 30–40% reduction in time spent on proposal preparation per team, clearer problem statements and MVP definitions in Launchpad submissions, and more teams progressing from ideation to POC or pilot without intensive one‑to‑one coaching. This work is intentionally scoped to the front‑end journey from idea to strong, fundable proposal; it does not seek to change funding governance, replace the Launchpad platform, or solve downstream delivery challenges.
+Success would mean public officers can reliably turn raw ideas into fundable, user‑centred proposals in weeks instead of months, and innovation enablers receive higher‑quality submissions that are faster to review and easier to fund. Early signs that we are on the right track include a 30–40% reduction in time spent on proposal preparation per team, clearer problem statements and MVP definitions in programme submissions, and more teams progressing from ideation to POC or pilot without intensive one‑to‑one coaching. This work is intentionally scoped to the front‑end journey from idea to strong, fundable proposal; it does not seek to change funding governance, replace existing programme platforms, or solve downstream delivery challenges.
 
 We recommend proceeding to a focused discovery sprint with 2–3 pilot agencies to validate root causes and test early solution concepts, with a view to scoping a proof‑of‑concept for the next funding cycle.
 ---
@@ -57,7 +57,7 @@ PARAGRAPH STRUCTURE (do not label paragraphs)
 STYLE RULES — follow these without exception
 - Never use these template phrases: "Early signals of progress would include", "The proposal does not seek to address", "Solutions will need to work within constraints including", "Key stakeholders include", "This challenge directly affects", "When done well,", "Success would see".
 - Use smooth connectors ("and", "while", "so that", "with the intent to") instead of starting consecutive sentences with the same subject.
-- After introducing a group (e.g., "public officers"), refer back to them with a pronoun or short noun ("they", "these officers", "this group") rather than repeating the full phrase.
+- After introducing a group (e.g., "public officers"), refer back to them with a pronoun or short noun ("they", "these officers", "this group") rather than repeating the full phrase. Do not assume a specific country — write for a general public sector audience.
 - Preserve specific numbers, percentages, named programmes, and named agencies from the inputs — do not invent figures.
 - Strip any label prefixes from input field values (e.g., "Focus on:", "Primary:", "Any solution must:", "Key constraints include:", "This proposal is explicitly scoped to exclude:") and rephrase the underlying content as natural prose.
 - If an input field is empty or contains only a label with no content, omit that concept entirely.
@@ -101,7 +101,7 @@ const FALLBACKS: Record<SectionType, string> = {
   problem_identification: '',
   problem_validation: 'Validate your problem by quantifying impact (time, cost, number of users), identifying current workarounds, and assessing urgency.',
   user_research: 'Key questions: What challenges do you face? How do you handle this today? What would an ideal solution look like? What would prevent you from adopting a new tool?',
-  opportunity_framing: 'A strong HMW statement: names a specific audience, describes the gap or tension, and avoids implying a solution. Example: "How might we help public officers articulate a compelling problem statement without needing specialist BA support?"',
+  opportunity_framing: 'A strong HMW statement: names a specific audience, describes the gap or tension, and avoids implying a solution. Example: "How might we help public officers articulate a compelling problem statement without specialist support?"',
   success_definition: 'Define success in terms of observable changes for users — not features delivered. Ask: "What would be different in the world if this problem were solved?"',
   executive_summary: '',
 };
@@ -141,17 +141,17 @@ function extractScoringSignals(
   return {
     hasUserCount: /\d[\d,]+/.test(impact),
     hasLargeNumber: numbers.some(n => parseInt(n.replace(/,/g, ''), 10) >= 1000),
-    hasTAMReference: /154[,\s]?0{3}|154k|total.*officer|public.*service.*workforce/i.test(impact + stakeholders),
-    stakeholderDepth: ['primary', 'secondary', 'officer', 'organiser', 'organizer', 'ministry', 'agency', 'launchpad', 'naig', 'govtech', 'designx'].filter(
+    hasTAMReference: /total.*officer|public.*service.*workforce|all\s+officer|workforce\s+size|\d{4,}.*officer|officer.*\d{4,}/i.test(impact + stakeholders),
+    stakeholderDepth: ['primary', 'secondary', 'officer', 'organiser', 'organizer', 'ministry', 'agency', 'programme', 'department', 'division'].filter(
       w => stakeholders.toLowerCase().includes(w)
     ).length,
     hasTimeInWorkaround: /hour|day|week|month|manual|1-on-1|workshop|waitlist/i.test(workarounds),
     hasDetailedWorkaround: workarounds.trim().length > 30,
-    urgencyDepth: ['oecd', 'psd', 'digitalisation', 'digitalization', 'policy', 'budget', 'hackathon', 'launchpad', 'mvp', 'funded', 'deadline'].filter(
+    urgencyDepth: ['oecd', 'digitalisation', 'digitalization', 'policy', 'budget', 'hackathon', 'programme', 'mvp', 'funded', 'deadline', 'mandate'].filter(
       w => urgency.toLowerCase().includes(w)
     ).length,
     hasInterviewEvidence: /interview|surveyed|spoke with|spoke to|feedback from|validated with|\d+\s*(user|officer|organiser|organizer|respondent|participant)/i.test(allText),
-    hasSourceCitation: /source:|cited|psd|oecd|statistics|survey|data from|based on/i.test(impact),
+    hasSourceCitation: /source:|cited|oecd|statistics|survey|data from|based on|report|research/i.test(impact),
   };
 }
 
@@ -233,7 +233,7 @@ function reviewProblemValidation(
     strengths.push('Impact is quantified with a concrete user count — strong foundation for a fundable proposal.');
   }
   if (signals.hasTAMReference) {
-    strengths.push('References the 154,000 public service workforce TAM, framing the problem at ecosystem scale.');
+    strengths.push('References the broader public service workforce size, framing the problem at ecosystem scale.');
   }
   if (/\d+[\s-]*(hour|day|week|month)/i.test(impact)) {
     strengths.push('Time-based impact metric (hours/days) makes the cost of inaction tangible to reviewers.');
@@ -242,9 +242,9 @@ function reviewProblemValidation(
     strengths.push('Annual aggregation of impact creates a compelling macro-level case.');
   }
   if (/1\.5\s*day|12\s*hour|coaching/i.test(impact)) {
-    strengths.push('1.5 days of coaching per team is a specific, verifiable data point — this is the kind of evidence Launchpad reviewers look for.');
+    strengths.push('1.5 days of coaching per team is a specific, verifiable data point — this is the kind of evidence reviewers look for.');
   }
-  if (['officer', 'organiser', 'organizer', 'ministry', 'agency', 'govtech', 'naig', 'launchpad', 'designx'].some(w => stakeholders.toLowerCase().includes(w))) {
+  if (['officer', 'organiser', 'organizer', 'ministry', 'agency', 'department', 'division'].some(w => stakeholders.toLowerCase().includes(w))) {
     strengths.push('Stakeholders are named specifically (not just "users") — primary and secondary roles are distinguishable.');
   }
   if (['design thinking', 'business analyst', 'ba ', 'template', '1-on-1', 'workshop', 'waitlist', 'colleague', 'search'].some(w => workarounds.toLowerCase().includes(w))) {
@@ -264,11 +264,11 @@ function reviewProblemValidation(
       const v = parseInt(n.replace(/,/g, ''), 10);
       return v > 0 && v < 1000;
     });
-    redFlags.push(`User estimate appears low (${smallVal} detected). Singapore public service has ~154,000 officers. If your problem affects even 10% of officers, that is 15,400 people. Clarify if this is intentionally a pilot cohort. (-1 point)`);
+    redFlags.push(`User estimate appears low (${smallVal} detected). If your problem affects a larger portion of officers, clarify whether this is intentionally a pilot cohort or the full affected population. (-1 point)`);
   }
 
   if (!signals.hasTAMReference && signals.hasLargeNumber) {
-    redFlags.push('TAM not benchmarked — add a line anchoring your count to the 154,000 public service workforce (e.g., "representing 10% of all public officers"). (-1 point)');
+    redFlags.push('TAM not benchmarked — add a line anchoring your count to the total affected workforce (e.g., "representing 10% of all officers in this programme"). (-1 point)');
   }
 
   if (!signals.hasTimeInWorkaround) {
@@ -276,17 +276,17 @@ function reviewProblemValidation(
   }
 
   const urgencyLower = urgency.toLowerCase();
-  const hasUrgencyDriver = ['oecd', 'psd', 'digitalisation', 'digitalization', 'policy', 'budget', 'hackathon', 'launchpad', 'funded', 'deadline', 'constraint'].some(w => urgencyLower.includes(w));
+  const hasUrgencyDriver = ['oecd', 'digitalisation', 'digitalization', 'policy', 'budget', 'hackathon', 'programme', 'funded', 'deadline', 'mandate', 'constraint'].some(w => urgencyLower.includes(w));
   if (!hasUrgencyDriver) {
-    redFlags.push('Urgency lacks an external driver. Reference a named policy mandate (e.g., "OECD-noted efficiency targets", "PS21 digitalisation agenda") or a programme deadline to justify "why now".');
+    redFlags.push('Urgency lacks an external driver. Reference a named policy mandate, a programme deadline, or a strategic priority to justify "why now".');
   }
 
   if (!signals.hasInterviewEvidence) {
-    redFlags.push('No interview or user validation evidence found. Without it, the problem is asserted, not validated. Add: "We interviewed X officers / surveyed Y respondents and found…" — this is the single biggest gap for a Launchpad submission. (-1 point)');
+    redFlags.push('No interview or user validation evidence found. Without it, the problem is asserted, not validated. Add: "We interviewed X officers / surveyed Y respondents and found…" — this is one of the most important signals for reviewers. (-1 point)');
   }
 
   if (!signals.hasSourceCitation) {
-    redFlags.push('No data source cited for your impact figures. Unattributed numbers are easy to challenge. Add "(Source: PSD Public Service Statistics 2023)" or "based on X organiser interviews". (-1 point)');
+    redFlags.push('No data source cited for your impact figures. Unattributed numbers are easy to challenge. Add "(Source: [agency/report name])" or "based on X organiser interviews". (-1 point)');
   }
 
   if (!['design thinking', 'business analyst', 'ba ', 'template', '1-on-1', 'workshop', 'waitlist', 'colleague', 'search'].some(w => workarounds.toLowerCase().includes(w))) {
@@ -294,29 +294,29 @@ function reviewProblemValidation(
   }
 
   suggestions.push(
-    `Impact Assessment — strengthen sourcing: Add "(Source: PSD Public Service Statistics 2023)" after your user figure. If the coaching estimate comes from organiser interviews or Launchpad data, cite it explicitly.`
+    `Impact Assessment — strengthen sourcing: Add a source citation after your user figure (e.g., "(Source: [agency name] workforce data)"). If the coaching estimate comes from organiser interviews or programme data, cite it explicitly.`
   );
   suggestions.push(
-    `Impact Assessment — add cost translation: Convert wasted hours into dollar cost to unlock the "cost of inaction" framing. Example: "300,000 hours × $40/hr loaded cost = $12M in annual unproductive officer time."`
+    `Impact Assessment — add cost translation: Convert wasted hours into an estimated cost to unlock the "cost of inaction" framing. Example: "X hours × estimated hourly rate = $Y in annual unproductive officer time."`
   );
   suggestions.push(
     `Key Stakeholders — add influence/interest: For each stakeholder group, note their stake in the outcome. This helps reviewers understand adoption dynamics.`
   );
   suggestions.push(
-    `Existing Workarounds — add friction data: Quantify the workaround pain. Example: "BA support has a 2–3 week waitlist; design thinking workshops cost $3,000–$5,000 per team and are only available to ~20% of officers."`
+    `Existing Workarounds — add friction data: Quantify the workaround pain. Example: "specialist support has a 2–3 week waitlist; workshops are only available to ~20% of officers."`
   );
   suggestions.push(
-    `Urgency & Priority — tie to a named programme: Anchor urgency to a real deadline or policy. Example: "With the next Launchpad cohort launching in Q3, 200+ teams will need coaching support."`
+    `Urgency & Priority — tie to a named programme or policy: Anchor urgency to a real deadline or mandate. Example: "With the next programme cohort launching in Q3, 200+ teams will need coaching support."`
   );
 
   followUpQuestions.push('Have you interviewed at least 5 affected officers? If yes, what did they say about the biggest friction point in the current workarounds?');
-  followUpQuestions.push('What data source supports your user estimate — is it PSD headcount data, a ministry survey, or an extrapolation from programme participation rates?');
+  followUpQuestions.push('What data source supports your user estimate — is it official workforce data, a ministry survey, or an extrapolation from programme participation rates?');
   followUpQuestions.push('What is the current cost of the workarounds in officer time? Can you get the programme team to confirm the coaching estimate in writing?');
-  followUpQuestions.push('Are there comparable govtech initiatives that quantified a similar productivity gap? Could you benchmark against them?');
+  followUpQuestions.push('Are there comparable public sector initiatives that quantified a similar productivity gap? Could you benchmark against them?');
 
   nextSteps.push('Conduct 3–5 user interviews with public officers who have submitted proposals in the last 12 months. Ask: "How long did you spend on the proposal? Where did you get stuck? What did you use for help?"');
   nextSteps.push('Request programme participation and coaching data from the relevant team to substantiate your estimates and confirm annual cohort size.');
-  nextSteps.push('Add a single sentence to your Impact Assessment citing the 154,000 public service TAM (PSD source) and your percentage capture.');
+  nextSteps.push('Add a sentence to your Impact Assessment anchoring your user count to the total affected workforce and stating your estimated percentage capture.');
   nextSteps.push('Draft a cost-of-inaction calculation: total affected officers × hours wasted × estimated hourly cost. Use this as your headline impact figure.');
 
   return {
@@ -352,7 +352,7 @@ function reviewUserResearch(
   const followUpQuestions: string[] = [];
   const nextSteps: string[] = [];
 
-  const hasNamedGroups = ['officer', 'organiser', 'organizer', 'ministry', 'agency', 'launchpad', 'govtech', 'manager', 'director'].some(w => targetUsers.toLowerCase().includes(w));
+  const hasNamedGroups = ['officer', 'organiser', 'organizer', 'ministry', 'agency', 'programme', 'department', 'manager', 'director'].some(w => targetUsers.toLowerCase().includes(w));
   const hasCountInFindings = /\d+\s*(officer|respondent|participant|user|person|people|interview)/i.test(allText);
   const hasQuoteOrVerbatim = /"[^"]{10,}"|'[^']{10,}'|said|told us|mentioned|reported/.test(researchFindings);
   const hasPainPoints = /pain|friction|frustrat|difficult|challeng|time-consum|manual|confus|unclear/i.test(allText);
@@ -361,15 +361,15 @@ function reviewUserResearch(
   const hasOpenQuestions = /\?/.test(interviewQuestions);
   const questionCount = (interviewQuestions.match(/\n/g) || []).length + (interviewQuestions.trim().length > 10 ? 1 : 0);
   const hasPrioritisedNeeds = /\d\.|first|second|third|top|priority|most important|critical/i.test(userNeeds);
-  const hasGovtechRef = /launchpad|govtech|naig|psd|oecd|wogaa|singpass|myinfo/i.test(allText);
+  const hasGovtechRef = /programme|launchpad|govtech|naig|psd|oecd|public service/i.test(allText);
 
   if (hasNamedGroups) { score += 2; strengths.push('Target user groups are named specifically (e.g., officers, organisers) — reviewers can picture who the product serves.'); }
-  else { score += 0; redFlags.push('Target users are not named specifically. Replace generic terms like "users" with role titles (e.g., "GovTech LAUNCH! organisers", "public officers submitting proposals"). (-1 point)'); }
+  else { score += 0; redFlags.push('Target users are not named specifically. Replace generic terms like "users" with role titles (e.g., "programme organisers", "public officers submitting proposals"). (-1 point)'); }
 
   if (hasCountInFindings) { score += 2; strengths.push('Research findings include a participant count — this quantifies the evidence base and strengthens credibility.'); }
   else { redFlags.push('No participant count in Research Findings. Add "We interviewed X officers" or "surveyed Y respondents" to make the evidence base explicit. (-1 point)'); }
 
-  if (hasQuoteOrVerbatim) { score += 2; strengths.push('Verbatim quotes or attributed observations in findings — the strongest form of user evidence for a Launchpad submission.'); }
+  if (hasQuoteOrVerbatim) { score += 2; strengths.push('Verbatim quotes or attributed observations in findings — the strongest form of user evidence for a programme submission.'); }
   else if (hasInsightDepth) { score += 1; strengths.push('Research findings are substantive — good depth even without direct quotes.'); }
   else { redFlags.push('Research findings are thin or missing. Add specific insights with participant attribution (e.g., "3 of 5 officers said they spend >2 hours searching for guidance"). (-1 point)'); }
 
@@ -383,22 +383,22 @@ function reviewUserResearch(
   else { redFlags.push('Prioritised user needs are vague. State each need precisely: who needs what, and under what conditions.'); }
 
   if (hasPrioritisedNeeds) { score += 1; strengths.push('User needs appear ranked or prioritised — this helps scope the MVP to highest-value features.'); }
-  if (hasGovtechRef) { score += 1; strengths.push('References GovTech/PSD/Launchpad context — anchors research in the Singapore public service ecosystem.'); }
+  if (hasGovtechRef) { score += 1; strengths.push('References the programme and public service context — anchors research in the relevant ecosystem.'); }
 
   const redFlagCount = redFlags.length;
   score = Math.max(0, Math.min(10, score - redFlagCount));
 
-  suggestions.push('Target Users — add organisation and count: e.g., "Primary: ~200 Launchpad organisers (GovTech, NAIG, DesignX) who coach 500+ teams per cohort. Secondary: ~15,400 public officers who submit proposals annually."');
-  suggestions.push('Research Findings — lead with numbers: "We interviewed 8 officers across 3 ministries. 7/8 reported spending 3+ hours searching for proposal guidance. 5/8 had been waitlisted for BA support."');
-  suggestions.push('User Needs — use a ranked "How Might We" format: "1 (Critical): HMW give officers on-demand proposal coaching without BA bottlenecks? 2 (High): HMW reduce time-to-first-draft from 3 hours to under 30 minutes?"');
+  suggestions.push('Target Users — add organisation and count: e.g., "Primary: ~200 programme organisers who coach 500+ teams per cohort. Secondary: ~X public officers who submit proposals annually."');
+  suggestions.push('Research Findings — lead with numbers: "We interviewed 8 officers across 3 agencies. 7/8 reported spending 3+ hours searching for proposal guidance. 5/8 had been waitlisted for specialist support."');
+  suggestions.push('User Needs — use a ranked "How Might We" format: "1 (Critical): HMW give officers on-demand proposal coaching without specialist bottlenecks? 2 (High): HMW reduce time-to-first-draft from 3 hours to under 30 minutes?"');
   suggestions.push('Interview Questions — add a "workaround" probe: "Walk me through the last time you wrote a proposal — what did you do when you got stuck?" This surfaces the exact pain Problem Validation needs to quantify.');
 
   followUpQuestions.push('Have you conducted at least 5 user interviews? If not, what is preventing you from reaching that threshold before submission?');
   followUpQuestions.push('What was the single most surprising thing you heard in interviews? If nothing surprised you, the questions may have been leading — revisit the interview script.');
-  followUpQuestions.push('Can you get a GovTech LAUNCH! organiser to validate your findings? Their endorsement would significantly strengthen the submission.');
+  followUpQuestions.push('Can you get a programme organiser to validate your findings? Their endorsement would significantly strengthen the submission.');
   followUpQuestions.push('Are your prioritised user needs directly traceable to interview quotes, or are they inferred? Reviewers will ask this question.');
 
-  nextSteps.push('Conduct 3–5 structured interviews with Launchpad organisers and 3–5 with proposal-submitting officers. Record with permission and transcribe key quotes.');
+  nextSteps.push('Conduct 3–5 structured interviews with programme organisers and 3–5 with proposal-submitting officers. Record with permission and transcribe key quotes.');
   nextSteps.push('Synthesise findings into an affinity map: group quotes by theme, count frequency, rank themes by recurrence. This becomes your "Prioritised User Needs" section.');
   nextSteps.push('Add a one-line participant summary at the top of Research Findings: "Based on interviews with N=X participants across Y agencies, conducted [month/year]."');
   nextSteps.push('Cross-reference your user needs with the Problem Validation impact figures — every need should map to a quantified friction point.');
@@ -430,12 +430,12 @@ function reviewOpportunityFraming(
 
   const hasRootCauseDepth = rootCauses.trim().length > 60 && /because|due to|caused by|result of|lack of|absence of|gap in|barrier/i.test(rootCauses);
   const hasMultipleRootCauses = (rootCauses.match(/\n/g) || []).length >= 1 || rootCauses.trim().split(/[.;]/).filter(s => s.trim().length > 10).length >= 2;
-  const hasScopeAudience = /officer|organiser|organizer|ministry|agency|team|cohort|launchpad|govtech/i.test(opportunityScope);
-  const hasScopeContext = /proposal|launchpad|hackathon|innovation|govtech|public service|govtech/i.test(opportunityScope);
+  const hasScopeAudience = /officer|organiser|organizer|ministry|agency|team|cohort|programme|department/i.test(opportunityScope);
+  const hasScopeContext = /proposal|programme|hackathon|innovation|public service/i.test(opportunityScope);
   const hasScopeBoundary = /not include|exclude|out of scope|only|limited to|focus on|within|specific/i.test(opportunityScope);
   const hasConstraintDepth = designConstraints.trim().length > 40;
-  const hasNamedConstraints = /budget|timeline|policy|regulation|IM8|PDPA|data|privacy|security|compliance|legacy|existing|infrastructure|access|approval/i.test(designConstraints);
-  const hasGovtechContext = /launchpad|govtech|naig|psd|singpass|myinfo|oecd|designx/i.test(allText);
+  const hasNamedConstraints = /budget|timeline|policy|regulation|data|privacy|security|compliance|legacy|existing|infrastructure|access|approval/i.test(designConstraints);
+  const hasGovtechContext = /programme|launchpad|govtech|psd|oecd|public service/i.test(allText);
 
   if (hasHMWFormat && !hmwImpliesSolution && hmwHasAudience && hmwHasAction) {
     score += 2;
@@ -444,7 +444,7 @@ function reviewOpportunityFraming(
     score += 1;
     strengths.push('HMW format used correctly — now tighten the statement to name a specific audience and describe the gap more precisely.');
   } else if (!hasHMWFormat) {
-    redFlags.push('Statement is not in "How Might We" format. Rewrite as "How might we [help X] [achieve Y / overcome Z]?" — this format is required for Launchpad opportunity framing. (-1 point)');
+    redFlags.push('Statement is not in "How Might We" format. Rewrite as "How might we [help X] [achieve Y / overcome Z]?" — this format is standard for opportunity framing. (-1 point)');
   }
 
   if (hmwImpliesSolution) {
@@ -472,7 +472,7 @@ function reviewOpportunityFraming(
     score += 1;
     strengths.push('Scope is partially defined — add both audience (who) and context (in what situation) to make the boundary explicit.');
   } else {
-    redFlags.push('Opportunity scope is vague. Define who this opportunity is for and in what context (e.g., "public officers submitting innovation proposals through the Launchpad programme"). (-1 point)');
+    redFlags.push('Opportunity scope is vague. Define who this opportunity is for and in what context (e.g., "public officers submitting innovation proposals through the programme"). (-1 point)');
   }
 
   if (hasScopeBoundary) {
@@ -487,14 +487,14 @@ function reviewOpportunityFraming(
     strengths.push('Design constraints are named specifically (policy, data, compliance, infrastructure) — this grounds the opportunity in real-world delivery conditions.');
   } else if (hasConstraintDepth) {
     score += 1;
-    strengths.push('Constraints are present — naming specific types (IM8, PDPA, budget, legacy systems) would make this section significantly stronger.');
+    strengths.push('Constraints are present — naming specific types (data policy, security compliance, budget, legacy systems) would make this section significantly stronger.');
   } else {
-    redFlags.push('Design constraints are missing or too brief. Name at least 3 real constraints the solution must work within (e.g., "must comply with IM8 data classification", "no new budget — must use existing infrastructure"). (-1 point)');
+    redFlags.push('Design constraints are missing or too brief. Name at least 3 real constraints the solution must work within (e.g., "must comply with data classification policy", "no new budget — must use existing infrastructure"). (-1 point)');
   }
 
   if (hasGovtechContext) {
     score += 1;
-    strengths.push('References GovTech/Launchpad context — anchoring the opportunity in the Singapore public sector ecosystem is important for Launchpad reviewers.');
+    strengths.push('References the programme and public service context — anchoring the opportunity in the relevant ecosystem is important for reviewers.');
   }
 
   const redFlagCount = redFlags.length;
@@ -502,17 +502,17 @@ function reviewOpportunityFraming(
 
   suggestions.push('HMW Statement — test it with colleagues: show them the statement and ask "what solutions come to mind?" If they all suggest the same solution, the HMW is too narrow. If they can\'t think of any, it\'s too broad.');
   suggestions.push('Root Causes — use the "5 Whys": "Officers struggle to write proposals (symptom) → because they lack structured frameworks (cause 1) → because proposal coaching is scarce and reactive (cause 2) → because the system is designed around specialist support, not self-service."');
-  suggestions.push('Opportunity Scope — add a one-liner: "This opportunity is scoped to public officers in Singapore submitting proposals through the GovTech Launchpad programme for the first time."');
+  suggestions.push('Opportunity Scope — add a one-liner: "This opportunity is scoped to public officers submitting proposals through the programme for the first time."');
   suggestions.push('Design Constraints — categorise by type: policy constraints (what you must comply with), resource constraints (budget, team, time), and technical constraints (existing systems, data access). At least one of each.');
 
   followUpQuestions.push('Is your HMW statement specific enough to narrow to 3–5 solution directions? Test it: ask 3 people "what would you build for this?" and see if you get diverse answers.');
   followUpQuestions.push('Do your root causes trace back to insights from your User Research section? Every cause should be evidenced by something an actual user told you.');
-  followUpQuestions.push('Are your design constraints real (already confirmed) or assumed? Have you spoken to an IM8 advisor or data governance team to validate technical constraints?');
+  followUpQuestions.push('Are your design constraints real (already confirmed) or assumed? Have you spoken to a data governance or policy team to validate technical and compliance constraints?');
   followUpQuestions.push('What is the single most important constraint that any solution must satisfy? If a solution broke that constraint, would you reject it?');
 
   nextSteps.push('Workshop the HMW with your team: write 5 versions at different levels of specificity, then vote on which best captures the core tension without implying a solution.');
   nextSteps.push('Validate root causes with users: in your next interview, ask "why do you think this problem keeps happening?" Their language often reveals causes your team has missed.');
-  nextSteps.push('Confirm your top 3 design constraints with the relevant stakeholders (IM8 team, budget holder, system owner) before finalising this section.');
+  nextSteps.push('Confirm your top 3 design constraints with the relevant stakeholders (policy team, budget holder, system owner) before finalising this section.');
   nextSteps.push('Use your HMW statement as the headline for your Executive Summary — it is the most concise framing of why this problem deserves attention and investment.');
 
   return { __type: 'validation_coach', score, scoreLabel: getReadinessLabel(score), strengths, redFlags, suggestions, followUpQuestions, nextSteps };
@@ -541,7 +541,7 @@ function reviewSuccessDefinition(
   const hasEarlySignalCount = /\d+|\d+%|number|count|rate/i.test(earlySignals);
   const hasOutOfScopeExamples = outOfScope.trim().length > 40 && /not|exclude|outside|beyond|won't|will not|does not include/i.test(outOfScope);
   const hasAlignmentToProblem = /problem|issue|friction|challenge|pain|gap/i.test(desiredOutcomes + doneWell);
-  const hasGovtechContext = /officer|launchpad|govtech|naig|psd|public service/i.test(allText);
+  const hasGovtechContext = /officer|programme|launchpad|govtech|psd|public service/i.test(allText);
 
   if (hasOutcomeLanguage && hasUserSubject && !hasSolutionLanguage) {
     score += 2;
@@ -594,7 +594,7 @@ function reviewSuccessDefinition(
 
   if (hasGovtechContext) {
     score += 1;
-    strengths.push('Outcomes are grounded in the Singapore public service context — reviewers can picture the affected population and environment.');
+    strengths.push('Outcomes are grounded in the public service context — reviewers can picture the affected population and environment.');
   }
 
   const redFlagCount = redFlags.length;
@@ -668,7 +668,7 @@ function generateExecutiveSummaryFallback(ctx: Record<string, string>): string {
     }
     paragraphs.push(parts.join(' '));
   } else {
-    paragraphs.push('A recurring operational challenge has been identified within the Singapore public service that constrains productivity and officer effectiveness.');
+    paragraphs.push('A recurring operational challenge has been identified within the public service that constrains productivity and officer effectiveness.');
   }
 
   if (hasOpportunity) {
@@ -925,7 +925,7 @@ export function getFeedbackForSection(
   return null;
 }
 
-const CHAT_SYSTEM_PROMPT = `You are an expert AI coach helping Singapore public officers write strong, fundable innovation proposals for programmes like Launchpad. You give direct, specific, actionable feedback grounded in public service context. Be concise, warm, and practical. Never give generic advice — always refer to the user's actual text.`;
+const CHAT_SYSTEM_PROMPT = `You are an expert AI coach helping public officers write strong, fundable innovation proposals. You give direct, specific, actionable feedback grounded in public service context. Be concise, warm, and practical. Never give generic advice — always refer to the user's actual text.`;
 
 export async function getChatReply(
   conversationHistory: { role: 'user' | 'assistant'; text: string }[],
@@ -949,12 +949,12 @@ export async function getChatReply(
     await new Promise(resolve => setTimeout(resolve, 600));
     const lastUserMsg = conversationHistory.filter(m => m.role === 'user').at(-1)?.text?.toLowerCase() ?? '';
     if (lastUserMsg.includes('example') || lastUserMsg.includes('show me')) {
-      return "Here's an example for the Singapore public service context:\n\n**Problem Statement:** \"Public officers submitting proposals through Launchpad spend 20–40 hours preparing a first draft, often without structured guidance. This creates a bottleneck for innovation enablers who spend 1.5 days of coaching per team just on proposal basics.\"\n\nThe key elements: names the specific group, describes the friction with a time estimate, and links to an external programme (Launchpad).";
+      return "Here's an example for a public service context:\n\n**Problem Statement:** \"Public officers submitting proposals through an innovation programme spend 20–40 hours preparing a first draft, often without structured guidance. This creates a bottleneck for innovation enablers who spend 1.5 days of coaching per team just on proposal basics.\"\n\nThe key elements: names the specific group, describes the friction with a time estimate, and links to a named programme.";
     }
     if (lastUserMsg.includes('specific') || lastUserMsg.includes('quantif')) {
       return "For the Current Impact field, aim to include: (1) a number — how many people affected or how much time/cost is lost, (2) a frequency — per week, per proposal cycle, per year, and (3) a citation if you have one. For example: \"Officers spend an estimated 20–40 hours per proposal cycle on drafting, with no self-service support available.\" Even rough estimates are better than vague language like \"many\" or \"significant\".";
     }
-    return "That's a good question. In the Singapore public service context, the key is to be specific and tie your points back to named programmes (Launchpad, NAIG, DesignX) and real user groups (public officers, programme organisers). Would you like me to review what you've written so far? Click **Get Feedback** when your fields are filled in.";
+    return "That's a good question. The key is to be specific and tie your points back to named programmes and real user groups (public officers, programme organisers). Would you like me to review what you've written so far? Click **Get Feedback** when your fields are filled in.";
   }
 
   try {

@@ -18,7 +18,7 @@ const SECTION_LABELS: Record<SectionType, string> = {
 };
 
 function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString('en-SG', { hour: '2-digit', minute: '2-digit', hour12: false });
+  return new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false });
 }
 
 function renderMarkdown(text: string): string {
