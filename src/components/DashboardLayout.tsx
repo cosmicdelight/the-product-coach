@@ -1,15 +1,41 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Lightbulb, LayoutDashboard, FilePlus, Bell, LogOut, Menu, X, User, ChevronDown, ArrowLeftRight, Settings, Calendar } from 'lucide-react';
+import { Lightbulb, LayoutDashboard, Bell, LogOut, Menu, X, User, ChevronDown, ArrowLeftRight, Settings, Calendar } from 'lucide-react';
 import { UserRole } from '../types/database';
+import { supabase } from '../lib/supabase';
+import { NotificationsPanel } from './NotificationsPanel';
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { profile, activeRole, signOut, switchRole } = useAuth();
+  const { profile, user, activeRole, signOut, switchRole } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+    fetchUnreadCount();
+    const channel = supabase
+      .channel('notif_badge')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, () => {
+        fetchUnreadCount();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
+
+  async function fetchUnreadCount() {
+    if (!user) return;
+    const { count } = await supabase
+      .from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('read', false);
+    setUnreadCount(count ?? 0);
+  }
 
   const isOrganizer = activeRole === 'organizer';
   const dashPath = isOrganizer ? '/organizer/dashboard' : '/officer/dashboard';
@@ -64,13 +90,26 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             </div>
 
             <div className="flex items-center gap-3">
-              <button className="relative p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors">
-                <Bell className="h-5 w-5" />
-              </button>
+              <div className="relative">
+                <button
+                  onClick={() => { setNotifOpen(o => !o); setProfileOpen(false); }}
+                  className={`relative p-2 rounded-lg transition-colors ${notifOpen ? 'bg-gray-100 text-gray-900' : 'text-gray-500 hover:bg-gray-100'}`}
+                >
+                  <Bell className="h-5 w-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1 right-1 min-w-[16px] h-4 bg-blue-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-0.5 leading-none">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+                {notifOpen && (
+                  <NotificationsPanel onClose={() => setNotifOpen(false)} />
+                )}
+              </div>
 
               <div className="hidden md:block relative">
                 <button
-                  onClick={() => setProfileOpen(!profileOpen)}
+                  onClick={() => { setProfileOpen(o => !o); setNotifOpen(false); }}
                   className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
                 >
                   <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">

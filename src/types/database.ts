@@ -16,7 +16,8 @@ export type NotificationType =
   | 'approval'
   | 'rejection'
   | 'collaborator_joined'
-  | 'collaborator_submitted';
+  | 'collaborator_submitted'
+  | 'collaborator_invited';
 
 export type SectionType =
   | 'problem_identification'
