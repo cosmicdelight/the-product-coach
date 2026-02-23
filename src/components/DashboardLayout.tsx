@@ -58,7 +58,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       ? 'bg-blue-50 text-blue-700'
       : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900';
 
-  const roleLabel = (role: UserRole) => role === 'organizer' ? 'Organiser' : 'Public Officer';
+  const roleLabel = (role: UserRole) => role === 'organizer' ? 'Organiser' : 'Innovator';
 
   return (
     <div className="min-h-screen bg-gray-50">

@@ -42,7 +42,7 @@ export function ProfilePage() {
   const allRoles: { role: UserRole; label: string; description: string; icon: React.ReactNode }[] = [
     {
       role: 'officer',
-      label: 'Public Officer',
+      label: 'Innovator',
       description: 'Submit and manage innovation proposals. Track progress and collaborate with reviewers.',
       icon: <FileText className="h-6 w-6" />,
     },

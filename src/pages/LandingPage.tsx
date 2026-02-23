@@ -29,7 +29,7 @@ export function LandingPage() {
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-4 py-1.5 rounded-full text-sm font-medium mb-6">
             <Shield className="h-4 w-4" />
-            Built for Public Officers Worldwide
+            Built for Innovators Worldwide
           </div>
           <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 mb-6 leading-tight">
             Turn Ideas Into
@@ -140,7 +140,7 @@ export function LandingPage() {
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-3xl font-bold text-white mb-4">Ready to Build Your First Proposal?</h2>
           <p className="text-blue-100 mb-8 text-lg">
-            Join public officers around the world transforming workplace ideas into funded solutions.
+            Join innovators around the world transforming workplace ideas into funded solutions.
           </p>
           <Link
             to="/register"
@@ -160,7 +160,7 @@ export function LandingPage() {
             </div>
             <span className="text-white font-semibold">Product Coach</span>
           </div>
-          <p className="text-sm">Empowering public officers everywhere to innovate</p>
+          <p className="text-sm">Empowering innovators everywhere to build better solutions</p>
         </div>
       </footer>
     </div>

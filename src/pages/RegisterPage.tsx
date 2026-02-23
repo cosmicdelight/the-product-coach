@@ -41,7 +41,7 @@ export function RegisterPage() {
   };
 
   const roleOptions: { value: UserRole; label: string; icon: React.ReactNode; desc: string }[] = [
-    { value: 'officer', label: 'Public Officer', icon: <User className="h-6 w-6" />, desc: 'Submit proposals' },
+    { value: 'officer', label: 'Innovator', icon: <User className="h-6 w-6" />, desc: 'Submit proposals' },
     { value: 'organizer', label: 'Organiser', icon: <Briefcase className="h-6 w-6" />, desc: 'Review submissions' },
   ];
 
