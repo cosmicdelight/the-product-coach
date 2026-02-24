@@ -60,7 +60,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     wizardStep: 1,
     title: 'Get Instant Feedback',
     body: "Click here to get AI-powered feedback on your current section. The coach will review your content against best-practice criteria and suggest specific improvements.",
-    tooltipPosition: 'top',
+    tooltipPosition: 'left',
   },
   {
     id: 'wizard-step-nav',

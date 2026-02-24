@@ -18,7 +18,7 @@ interface TooltipCoords {
 }
 
 const TOOLTIP_WIDTH = 320;
-const TOOLTIP_HEIGHT = 180;
+const TOOLTIP_HEIGHT = 260;
 const PADDING = 16;
 const SPOTLIGHT_PAD = 12;
 
