@@ -31,7 +31,7 @@ interface DemoTutorialContextType {
   steps: typeof TUTORIAL_STEPS;
   targets: Map<string, HTMLElement>;
   demoProposalId: string | null;
-  requestedWizardStep: number | null;
+  requestedWizardStep: { step: number; key: number } | null;
   startTutorial: () => void;
   nextStep: () => void;
   prevStep: () => void;
@@ -58,7 +58,8 @@ export function DemoTutorialProvider({ children }: { children: React.ReactNode }
   const [currentStep, setCurrentStep] = useState(0);
   const [targets, setTargets] = useState<Map<string, HTMLElement>>(new Map());
   const [demoProposalId, setDemoProposalId] = useState<string | null>(null);
-  const [requestedWizardStep, setRequestedWizardStep] = useState<number | null>(null);
+  const [requestedWizardStep, setRequestedWizardStep] = useState<{ step: number; key: number } | null>(null);
+  const wizardStepKeyRef = useRef(0);
   const initRef = useRef(false);
 
   useEffect(() => {
@@ -69,7 +70,12 @@ export function DemoTutorialProvider({ children }: { children: React.ReactNode }
   useEffect(() => {
     if (!tutorialActive) return;
     const step = TUTORIAL_STEPS[currentStep];
-    setRequestedWizardStep(step?.wizardStep ?? null);
+    if (step?.wizardStep != null) {
+      wizardStepKeyRef.current += 1;
+      setRequestedWizardStep({ step: step.wizardStep, key: wizardStepKeyRef.current });
+    } else {
+      setRequestedWizardStep(null);
+    }
   }, [tutorialActive, currentStep]);
 
   useEffect(() => {

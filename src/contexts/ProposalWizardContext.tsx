@@ -183,9 +183,9 @@ export function ProposalWizardProvider({ children }: { children: React.ReactNode
 
   useEffect(() => {
     if (loading) return;
-    if (requestedWizardStep !== null && requestedWizardStep >= 1 && requestedWizardStep <= 6) {
-      setCurrentStep(requestedWizardStep);
-      currentStepRef.current = requestedWizardStep;
+    if (requestedWizardStep !== null && requestedWizardStep.step >= 1 && requestedWizardStep.step <= 6) {
+      setCurrentStep(requestedWizardStep.step);
+      currentStepRef.current = requestedWizardStep.step;
     }
   }, [loading, requestedWizardStep]);
 
