@@ -183,10 +183,15 @@ export function LandingPage() {
   const [demoLoading, setDemoLoading] = useState(false);
 
   const handleTryDemo = async () => {
+    console.log('[Demo] Starting demo login...');
     setDemoLoading(true);
     const { error } = await signIn('demo@productcoach.app', 'DemoUser2024!');
+    console.log('[Demo] signIn result:', { error });
     if (!error) {
+      console.log('[Demo] Login successful, navigating to dashboard...');
       navigate('/officer/dashboard');
+    } else {
+      console.error('[Demo] Login failed:', error.message);
     }
     setDemoLoading(false);
   };
