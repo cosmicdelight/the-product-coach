@@ -1,5 +1,6 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useDemoTutorial } from '../../contexts/DemoTutorialContext';
 import { TooltipPosition } from '../../config/tutorialSteps';
 
@@ -104,13 +105,17 @@ export function TutorialOverlay() {
     totalSteps,
     steps,
     targets,
+    demoProposalId,
     nextStep,
     prevStep,
     skipTutorial,
   } = useDemoTutorial();
 
+  const navigate = useNavigate();
+  const location = useLocation();
   const [targetRect, setTargetRect] = useState<Rect | null>(null);
   const { w: _w, h: _h } = useWindowSize();
+  const navigatedRef = useRef<number | null>(null);
 
   const step = steps[currentStep];
 
@@ -134,6 +139,28 @@ export function TutorialOverlay() {
     const interval = setInterval(measureTarget, 200);
     return () => clearInterval(interval);
   }, [tutorialActive, measureTarget]);
+
+  useEffect(() => {
+    if (!tutorialActive || !step) return;
+    if (navigatedRef.current === currentStep) return;
+
+    const targetEl = targets.get(step.tutorialId);
+    if (targetEl) return;
+
+    const stepRoute = step.route;
+    const isOnCorrectPage = stepRoute === '/proposals'
+      ? location.pathname.includes('/proposals')
+      : location.pathname.startsWith(stepRoute);
+
+    if (!isOnCorrectPage) {
+      navigatedRef.current = currentStep;
+      if (stepRoute === '/proposals' && demoProposalId) {
+        navigate(`/proposals/${demoProposalId}/edit`);
+      } else {
+        navigate(stepRoute);
+      }
+    }
+  }, [tutorialActive, currentStep, step, targets, location.pathname, navigate, demoProposalId]);
 
   if (!tutorialActive || !step) return null;
 
@@ -233,10 +260,11 @@ export function TutorialOverlay() {
             </div>
           </div>
 
-          {/* Arrow hint when no target visible */}
+          {/* Loading indicator while navigating to the target page */}
           {!hasTarget && (
-            <div className="mx-4 mb-3 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg">
-              <p className="text-xs text-amber-700">Navigate to the relevant page to see this step highlighted.</p>
+            <div className="mx-4 mb-3 px-3 py-2 bg-blue-50 border border-blue-100 rounded-lg flex items-center gap-2">
+              <div className="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin flex-shrink-0" />
+              <p className="text-xs text-blue-700">Taking you to the right page...</p>
             </div>
           )}
 

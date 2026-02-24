@@ -3,6 +3,17 @@ import { useAuth } from './AuthContext';
 import { supabase } from '../lib/supabase';
 import { TUTORIAL_STEPS } from '../config/tutorialSteps';
 
+async function fetchDemoProposalId(userId: string): Promise<string | null> {
+  const { data } = await supabase
+    .from('proposals')
+    .select('id')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  return data?.id ?? null;
+}
+
 const STORAGE_KEY_PREFIX = 'demo_tutorial_';
 
 interface TutorialTargetEntry {
@@ -19,6 +30,7 @@ interface DemoTutorialContextType {
   totalSteps: number;
   steps: typeof TUTORIAL_STEPS;
   targets: Map<string, HTMLElement>;
+  demoProposalId: string | null;
   startTutorial: () => void;
   nextStep: () => void;
   prevStep: () => void;
@@ -44,7 +56,13 @@ export function DemoTutorialProvider({ children }: { children: React.ReactNode }
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [targets, setTargets] = useState<Map<string, HTMLElement>>(new Map());
+  const [demoProposalId, setDemoProposalId] = useState<string | null>(null);
   const initRef = useRef(false);
+
+  useEffect(() => {
+    if (!isDemo || !user) return;
+    fetchDemoProposalId(user.id).then(setDemoProposalId);
+  }, [isDemo, user]);
 
   useEffect(() => {
     if (!isDemo || !storageKey || initRef.current) return;
@@ -158,6 +176,7 @@ export function DemoTutorialProvider({ children }: { children: React.ReactNode }
     setTutorialActive(false);
     setShowWelcomeModal(true);
     setCurrentStep(0);
+    fetchDemoProposalId(user.id).then(setDemoProposalId);
   }, [user, storageKey]);
 
   const registerTarget = useCallback((entry: TutorialTargetEntry) => {
@@ -186,6 +205,7 @@ export function DemoTutorialProvider({ children }: { children: React.ReactNode }
       totalSteps: TUTORIAL_STEPS.length,
       steps: TUTORIAL_STEPS,
       targets,
+      demoProposalId,
       startTutorial,
       nextStep,
       prevStep,
