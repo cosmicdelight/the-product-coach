@@ -181,7 +181,7 @@ export function LandingPage() {
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-4 py-1.5 rounded-full text-sm font-medium mb-6">
             <Shield className="h-4 w-4" />
-            Built for Innovators Worldwide
+            Built for Public Sector Innovators
           </div>
           <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 mb-6 leading-tight">
             Turn Ideas Into
