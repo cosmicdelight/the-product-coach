@@ -155,15 +155,10 @@ export function TutorialOverlay() {
     if (!isOnCorrectPage) {
       navigatedRef.current = currentStep;
       if (stepRoute === '/proposals' && demoProposalId) {
-        const qs = step.wizardStep ? `?wizardStep=${step.wizardStep}` : '';
-        navigate(`/proposals/${demoProposalId}/edit${qs}`);
+        navigate(`/proposals/${demoProposalId}/edit`);
       } else {
         navigate(stepRoute);
       }
-    } else if (isOnCorrectPage && stepRoute === '/proposals' && step.wizardStep && demoProposalId) {
-      navigatedRef.current = currentStep;
-      const qs = `?wizardStep=${step.wizardStep}`;
-      navigate(`/proposals/${demoProposalId}/edit${qs}`, { replace: true });
     }
   }, [tutorialActive, currentStep, step, targets, location.pathname, navigate, demoProposalId]);
 

@@ -31,6 +31,7 @@ interface DemoTutorialContextType {
   steps: typeof TUTORIAL_STEPS;
   targets: Map<string, HTMLElement>;
   demoProposalId: string | null;
+  requestedWizardStep: number | null;
   startTutorial: () => void;
   nextStep: () => void;
   prevStep: () => void;
@@ -57,12 +58,19 @@ export function DemoTutorialProvider({ children }: { children: React.ReactNode }
   const [currentStep, setCurrentStep] = useState(0);
   const [targets, setTargets] = useState<Map<string, HTMLElement>>(new Map());
   const [demoProposalId, setDemoProposalId] = useState<string | null>(null);
+  const [requestedWizardStep, setRequestedWizardStep] = useState<number | null>(null);
   const initRef = useRef(false);
 
   useEffect(() => {
     if (!isDemo || !user) return;
     fetchDemoProposalId(user.id).then(setDemoProposalId);
   }, [isDemo, user]);
+
+  useEffect(() => {
+    if (!tutorialActive) return;
+    const step = TUTORIAL_STEPS[currentStep];
+    setRequestedWizardStep(step?.wizardStep ?? null);
+  }, [tutorialActive, currentStep]);
 
   useEffect(() => {
     if (!isDemo || !storageKey || initRef.current) return;
@@ -206,6 +214,7 @@ export function DemoTutorialProvider({ children }: { children: React.ReactNode }
       steps: TUTORIAL_STEPS,
       targets,
       demoProposalId,
+      requestedWizardStep,
       startTutorial,
       nextStep,
       prevStep,

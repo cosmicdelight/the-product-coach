@@ -1,7 +1,8 @@
 import { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
+import { useDemoTutorial } from './DemoTutorialContext';
 import { captureError, toAppError } from '../services/errorHandling';
 import {
   Proposal, ProposalSection, SectionType,
@@ -62,7 +63,6 @@ export function ProposalWizardProvider({ children }: { children: React.ReactNode
   const { user, profile } = useAuth();
   const { id } = useParams();
   const navigate = useNavigate();
-  const { search } = useLocation();
   const [proposal, setProposal] = useState<Proposal | null>(null);
   const [sections, setSections] = useState<Record<string, ProposalSection>>({});
   const [currentStep, setCurrentStep] = useState(1);
@@ -179,18 +179,15 @@ export function ProposalWizardProvider({ children }: { children: React.ReactNode
     }
   }, [id, loadProposal]);
 
+  const { requestedWizardStep } = useDemoTutorial();
+
   useEffect(() => {
     if (loading) return;
-    const params = new URLSearchParams(search);
-    const wizardStep = params.get('wizardStep');
-    if (wizardStep) {
-      const step = parseInt(wizardStep, 10);
-      if (step >= 1 && step <= 6) {
-        setCurrentStep(step);
-        currentStepRef.current = step;
-      }
+    if (requestedWizardStep !== null && requestedWizardStep >= 1 && requestedWizardStep <= 6) {
+      setCurrentStep(requestedWizardStep);
+      currentStepRef.current = requestedWizardStep;
     }
-  }, [loading, search]);
+  }, [loading, requestedWizardStep]);
 
   const loadCollaborators = async (proposalId: string) => {
     const { data, error } = await supabase
