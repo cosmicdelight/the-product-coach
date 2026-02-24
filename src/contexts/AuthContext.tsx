@@ -66,7 +66,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return roles[0] ?? null;
         });
       }
-    } catch {
+    } catch (error) {
+      console.error('Failed to load profile:', error);
     } finally {
       setLoading(false);
     }

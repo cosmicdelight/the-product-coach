@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import {
   Lightbulb, Target, Zap, ArrowRight, TrendingUp, Users, Shield,
   MessageSquare, CheckCircle2, Bot, FileText, BarChart3, Bell,
-  ChevronRight, Star, GitBranch, ClipboardCheck, UserPlus, Eye
+  Star, GitBranch, ClipboardCheck, UserPlus
 } from 'lucide-react';
 
 function WizardStepsMockup() {

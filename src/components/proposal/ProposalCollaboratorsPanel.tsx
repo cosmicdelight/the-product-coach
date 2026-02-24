@@ -67,7 +67,7 @@ function MemberRow({
           <p className="text-sm font-medium text-gray-900 truncate">
             {isYou ? `${name} (you)` : name}
           </p>
-          {isOwner && <Crown className="h-3 w-3 text-amber-500 flex-shrink-0" title="Owner" />}
+          {isOwner && <Crown className="h-3 w-3 text-amber-500 flex-shrink-0" aria-label="Owner" />}
         </div>
         <div className="mt-0.5">
           {isPending ? (
@@ -124,8 +124,8 @@ function InviteForm({ onInvite, onClose }: InviteFormProps) {
     try {
       const { inviteUrl: url } = await onInvite(email);
       setInviteUrl(url);
-    } catch (err: any) {
-      setError(err.message || 'Failed to create invite. Please try again.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to create invite. Please try again.');
     } finally {
       setLoading(false);
     }

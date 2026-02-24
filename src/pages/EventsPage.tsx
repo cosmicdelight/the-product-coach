@@ -19,6 +19,16 @@ interface EventWithCounts extends Event {
   my_role: 'owner' | 'collaborator';
 }
 
+interface EventRoleRow {
+  event_id: string;
+  role: EventWithCounts['my_role'];
+}
+
+type EventCountsRow = Event & {
+  event_organisers?: { count: number }[];
+  proposals?: { count: number }[];
+};
+
 export function EventsPage() {
   const [events, setEvents] = useState<EventWithCounts[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,9 +53,11 @@ export function EventsPage() {
 
     if (eventsRes.error) { console.error(eventsRes.error); setLoading(false); return; }
 
-    const roleMap = new Map((rolesRes.data || []).map((r: any) => [r.event_id, r.role]));
+    const roleRows = (rolesRes.data || []) as EventRoleRow[];
+    const roleMap = new Map(roleRows.map(r => [r.event_id, r.role]));
 
-    const mapped: EventWithCounts[] = (eventsRes.data || []).map((row: any) => ({
+    const eventRows = (eventsRes.data || []) as EventCountsRow[];
+    const mapped: EventWithCounts[] = eventRows.map((row) => ({
       ...row,
       proposal_count: row.proposals?.[0]?.count ?? 0,
       organiser_count: row.event_organisers?.[0]?.count ?? 0,

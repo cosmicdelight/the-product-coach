@@ -9,7 +9,7 @@ import { LastEditedBy } from '../components/proposal/LastEditedBy';
 
 export function ProposalDetailPage() {
   const { id } = useParams();
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const [proposal, setProposal] = useState<Proposal | null>(null);
   const [owner, setOwner] = useState<Profile | null>(null);
   const [sections, setSections] = useState<ProposalSection[]>([]);
@@ -40,7 +40,8 @@ export function ProposalDetailPage() {
   const toggleSection = (key: string) => {
     setExpanded(prev => {
       const next = new Set(prev);
-      next.has(key) ? next.delete(key) : next.add(key);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
       return next;
     });
   };

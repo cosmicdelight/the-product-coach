@@ -86,7 +86,7 @@ export interface ProposalSection {
   id: string;
   proposal_id: string;
   section_type: SectionType;
-  content: Record<string, any>;
+  content: Record<string, string>;
   ai_generated: boolean;
   completed: boolean;
   created_at: string;

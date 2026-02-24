@@ -9,6 +9,8 @@ import {
   UserCheck, UserX, AlertTriangle,
 } from 'lucide-react';
 
+type CollaboratorUserRow = { user_id: string | null };
+
 export function ProposalReviewPage() {
   const { id } = useParams();
   const { user } = useAuth();
@@ -112,8 +114,8 @@ export function ProposalReviewPage() {
         .eq('status', 'active');
 
       const collaboratorIds = (collabs || [])
-        .map((c: any) => c.user_id)
-        .filter((uid: string) => uid && uid !== proposal.user_id);
+        .map((c: CollaboratorUserRow) => c.user_id)
+        .filter((uid): uid is string => Boolean(uid) && uid !== proposal.user_id);
 
       const notifyUserIds = [proposal.user_id, ...collaboratorIds];
       if (notifyUserIds.length > 0) {
@@ -162,7 +164,8 @@ export function ProposalReviewPage() {
   const toggleSection = (key: string) => {
     setExpanded(prev => {
       const next = new Set(prev);
-      next.has(key) ? next.delete(key) : next.add(key);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
       return next;
     });
   };

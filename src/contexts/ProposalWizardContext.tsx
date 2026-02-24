@@ -15,6 +15,14 @@ function getPresenceColor(index: number): string {
   return PRESENCE_COLORS[index % PRESENCE_COLORS.length];
 }
 
+type PresenceStateEntry = {
+  user_id: string;
+  fullName?: string;
+  avatarUrl?: string | null;
+  currentSection?: string;
+  editingField?: string | null;
+};
+
 interface WizardContextType {
   proposal: Proposal | null;
   sections: Record<string, ProposalSection>;
@@ -24,7 +32,7 @@ interface WizardContextType {
   isCollaborator: boolean;
   collaborators: ProposalCollaboratorWithProfile[];
   presenceList: PresenceUser[];
-  saveSection: (sectionType: SectionType, content: Record<string, any>, completed: boolean) => Promise<void>;
+  saveSection: (sectionType: SectionType, content: Record<string, string>, completed: boolean) => Promise<void>;
   updateTitle: (title: string) => Promise<void>;
   updateEventId: (eventId: string | null) => Promise<void>;
   goToStep: (step: number) => void;
@@ -105,7 +113,7 @@ export function ProposalWizardProvider({ children }: { children: React.ReactNode
 
     channel
       .on('presence', { event: 'sync' }, () => {
-        const state = channel.presenceState<Omit<PresenceUser, 'userId'> & { user_id: string }>();
+        const state = channel.presenceState<PresenceStateEntry>();
         const users: PresenceUser[] = [];
         let colorIndex = 0;
         Object.entries(state).forEach(([, presences]) => {
@@ -113,10 +121,10 @@ export function ProposalWizardProvider({ children }: { children: React.ReactNode
             if (p.user_id !== user?.id) {
               users.push({
                 userId: p.user_id,
-                fullName: (p as any).fullName || 'Team Member',
-                avatarUrl: (p as any).avatarUrl || null,
-                currentSection: (p as any).currentSection || '',
-                editingField: (p as any).editingField || null,
+                fullName: p.fullName || 'Team Member',
+                avatarUrl: p.avatarUrl || null,
+                currentSection: p.currentSection || '',
+                editingField: p.editingField || null,
                 color: getPresenceColor(colorIndex++),
               });
             }
@@ -214,7 +222,7 @@ export function ProposalWizardProvider({ children }: { children: React.ReactNode
     return data;
   };
 
-  const saveSection = async (sectionType: SectionType, content: Record<string, any>, completed: boolean) => {
+  const saveSection = async (sectionType: SectionType, content: Record<string, string>, completed: boolean) => {
     setSaving(true);
     try {
       const p = await ensureProposalExists();
@@ -230,13 +238,13 @@ export function ProposalWizardProvider({ children }: { children: React.ReactNode
       if (error) throw error;
       setSections(prev => ({ ...prev, [sectionType]: data }));
 
-      const proposalUpdates: Record<string, any> = { updated_at: new Date().toISOString() };
+      const proposalUpdates: { updated_at: string; problem_statement?: string } = { updated_at: new Date().toISOString() };
       if (sectionType === 'problem_identification' && content.problemStatement) {
         proposalUpdates.problem_statement = content.problemStatement;
       }
       await supabase.from('proposals').update(proposalUpdates).eq('id', p.id);
-      if (proposalUpdates.problem_statement) {
-        setProposal(prev => prev ? { ...prev, problem_statement: proposalUpdates.problem_statement } : null);
+      if (proposalUpdates.problem_statement !== undefined) {
+        setProposal(prev => prev ? { ...prev, problem_statement: proposalUpdates.problem_statement! } : null);
       }
     } finally {
       setSaving(false);

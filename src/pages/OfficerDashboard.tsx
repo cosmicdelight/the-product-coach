@@ -23,6 +23,7 @@ function getInitials(name: string): string {
 }
 
 const COLLAB_COLORS = ['#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#14b8a6'];
+type DashboardFilter = ProposalStatus | 'all' | 'shared';
 
 export function OfficerDashboard() {
   const { user, profile } = useAuth();
@@ -31,7 +32,7 @@ export function OfficerDashboard() {
   const [collaboratorsByProposal, setCollaboratorsByProposal] = useState<Record<string, ProposalCollaboratorWithProfile[]>>({});
   const [openEvents, setOpenEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<ProposalStatus | 'all' | 'shared'>('all');
+  const [filter, setFilter] = useState<DashboardFilter>('all');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -57,14 +58,12 @@ export function OfficerDashboard() {
       ]);
 
       const ownedProposals = owned || [];
-      const sharedOnlyProposals = (shared || []).filter(
-        (p: any) => p.user_id !== user.id
-      );
+      const sharedOnlyProposals = (shared || []).filter((p) => p.user_id !== user.id);
 
       setProposals(ownedProposals);
       setSharedProposals(sharedOnlyProposals);
 
-      const allIds = [...ownedProposals.map(p => p.id), ...sharedOnlyProposals.map((p: any) => p.id)];
+      const allIds = [...ownedProposals.map(p => p.id), ...sharedOnlyProposals.map(p => p.id)];
       if (allIds.length > 0) {
         const { data: collabs } = await supabase
           .from('proposal_collaborators')
@@ -198,7 +197,7 @@ export function OfficerDashboard() {
           ].map(({ key, label, color }) => (
             <button
               key={key}
-              onClick={() => setFilter(key as any)}
+              onClick={() => setFilter(key as DashboardFilter)}
               className={`bg-white rounded-xl border-2 p-5 text-left transition-all hover:shadow-sm ${
                 filter === key ? `border-${color}-500` : 'border-gray-100'
               }`}

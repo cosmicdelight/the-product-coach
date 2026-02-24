@@ -8,7 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Event, EventStatus, ProposalWithProfile, ProposalStatus } from '../types/database';
 import {
   Calendar, ChevronLeft, Pencil, FileText, Clock,
-  CheckCircle, AlertCircle, XCircle, TrendingUp, ArrowRight, Archive,
+  CheckCircle, AlertCircle, XCircle, TrendingUp, ArrowRight,
   UserCheck, Lock,
 } from 'lucide-react';
 

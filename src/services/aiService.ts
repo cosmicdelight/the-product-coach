@@ -420,7 +420,6 @@ function reviewOpportunityFraming(
   const followUpQuestions: string[] = [];
   const nextSteps: string[] = [];
 
-  const hmwLower = hmwStatement.toLowerCase();
   const hasHMWFormat = /how might we|hmw/i.test(hmwStatement);
   const hmwLength = hmwStatement.trim().length;
   const hmwHasAudience = /officer|organiser|organizer|ministry|agency|public|user|team|staff/i.test(hmwStatement);
@@ -947,7 +946,8 @@ export async function getChatReply(
 
   if (!apiKey) {
     await new Promise(resolve => setTimeout(resolve, 600));
-    const lastUserMsg = conversationHistory.filter(m => m.role === 'user').at(-1)?.text?.toLowerCase() ?? '';
+    const userMessages = conversationHistory.filter(m => m.role === 'user');
+    const lastUserMsg = userMessages[userMessages.length - 1]?.text?.toLowerCase() ?? '';
     if (lastUserMsg.includes('example') || lastUserMsg.includes('show me')) {
       return "Here's an example for a public service context:\n\n**Problem Statement:** \"Public officers submitting proposals through an innovation programme spend 20–40 hours preparing a first draft, often without structured guidance. This creates a bottleneck for innovation enablers who spend 1.5 days of coaching per team just on proposal basics.\"\n\nThe key elements: names the specific group, describes the friction with a time estimate, and links to a named programme.";
     }

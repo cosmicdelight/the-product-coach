@@ -17,6 +17,13 @@ interface EventSummary {
   proposal_count: number;
 }
 
+type EventSummaryRow = {
+  id: string;
+  title: string;
+  status: string;
+  proposals?: { count: number }[];
+};
+
 export function OrganizerDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -50,7 +57,8 @@ export function OrganizerDashboard() {
       .order('created_at', { ascending: false })
       .limit(4);
     if (error) { console.error('Events load error:', error); return; }
-    const mapped: EventSummary[] = (data || []).map((row: any) => ({
+    const eventRows = (data || []) as EventSummaryRow[];
+    const mapped: EventSummary[] = eventRows.map((row) => ({
       id: row.id,
       title: row.title,
       status: row.status,

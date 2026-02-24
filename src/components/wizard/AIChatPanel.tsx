@@ -246,11 +246,11 @@ export function AIChatPanel({ proposalId, sectionType, fieldValues, onGetFeedbac
 
     const result = getFeedbackForSection(sectionType, fieldValues);
 
-    let feedbackPayload = result
+    const feedbackPayload = result
       ? buildFeedbackFromResult(result)
       : { score: 0, scoreLabel: '', strengths: [], redFlags: [], suggestions: [], followUpQuestions: [], nextSteps: [] };
 
-    let followUp = result ? buildFollowUpFromResult(result) : 'Would you like to ask me anything about this section?';
+    const followUp = result ? buildFollowUpFromResult(result) : 'Would you like to ask me anything about this section?';
 
     const responseContent: ChatMessageContent = {
       type: 'feedback',

@@ -64,8 +64,8 @@ export function EventFormModal({ event, onClose, onSaved }: Props) {
         if (err) throw err;
         onSaved(data);
       }
-    } catch (e: any) {
-      setError(e.message ?? 'Something went wrong');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Something went wrong');
     } finally {
       setSaving(false);
     }
