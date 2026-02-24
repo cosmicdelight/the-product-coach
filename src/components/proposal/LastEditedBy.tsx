@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { ProposalSectionEditWithProfile } from '../../types/database';
 import { Clock } from 'lucide-react';
@@ -22,11 +22,7 @@ interface Props {
 export function LastEditedBy({ proposalId, sectionType }: Props) {
   const [edit, setEdit] = useState<ProposalSectionEditWithProfile | null>(null);
 
-  useEffect(() => {
-    load();
-  }, [proposalId, sectionType]);
-
-  const load = async () => {
+  const load = useCallback(async () => {
     const { data } = await supabase
       .from('proposal_section_edits')
       .select('*, profile:profiles(*)')
@@ -36,7 +32,11 @@ export function LastEditedBy({ proposalId, sectionType }: Props) {
       .limit(1)
       .maybeSingle();
     if (data) setEdit(data as ProposalSectionEditWithProfile);
-  };
+  }, [proposalId, sectionType]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   if (!edit) return null;
 

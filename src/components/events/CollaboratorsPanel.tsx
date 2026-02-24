@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { UserPlus, Trash2, Crown, Users, Search } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
@@ -25,9 +25,7 @@ export function CollaboratorsPanel({ eventId, ownerId }: Props) {
 
   const isOwner = user?.id === ownerId;
 
-  useEffect(() => { loadCollaborators(); }, [eventId]);
-
-  const loadCollaborators = async () => {
+  const loadCollaborators = useCallback(async () => {
     const { data } = await supabase
       .from('event_organisers')
       .select('*, profile:profiles!event_organisers_organiser_id_fkey(*)')
@@ -35,7 +33,9 @@ export function CollaboratorsPanel({ eventId, ownerId }: Props) {
       .order('joined_at', { ascending: true });
     setCollaborators((data as CollaboratorEntry[]) || []);
     setLoading(false);
-  };
+  }, [eventId]);
+
+  useEffect(() => { loadCollaborators(); }, [loadCollaborators]);
 
   const handleSearch = async (q: string) => {
     setSearchQuery(q);

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Bell, Check, CheckCheck, Trash2, Users, FileText, MessageSquare, Award, RotateCcw, UserPlus } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -51,6 +51,18 @@ export function NotificationsPanel({ onClose }: Props) {
   const [loading, setLoading] = useState(true);
   const panelRef = useRef<HTMLDivElement>(null);
 
+  const fetchNotifications = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(30);
+    setNotifications(data ?? []);
+    setLoading(false);
+  }, [user]);
+
   useEffect(() => {
     if (!user) return;
     fetchNotifications();
@@ -63,7 +75,7 @@ export function NotificationsPanel({ onClose }: Props) {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [user]);
+  }, [user, fetchNotifications]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -74,18 +86,6 @@ export function NotificationsPanel({ onClose }: Props) {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [onClose]);
-
-  async function fetchNotifications() {
-    if (!user) return;
-    const { data } = await supabase
-      .from('notifications')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(30);
-    setNotifications(data ?? []);
-    setLoading(false);
-  }
 
   async function markAllRead() {
     if (!user) return;

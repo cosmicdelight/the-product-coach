@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { DashboardLayout } from '../components/DashboardLayout';
 import { useAuth } from '../contexts/AuthContext';
@@ -17,11 +17,7 @@ export function JoinProposalPage() {
   const [proposalId, setProposalId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
 
-  useEffect(() => {
-    if (user && id) handleJoin();
-  }, [user, id]);
-
-  const handleJoin = async () => {
+  const handleJoin = useCallback(async () => {
     const token = searchParams.get('token');
     if (!token || !id || !user) {
       setState('invalid');
@@ -100,7 +96,11 @@ export function JoinProposalPage() {
       console.error('Join error:', e);
       setState('error');
     }
-  };
+  }, [id, navigate, profile?.full_name, searchParams, user]);
+
+  useEffect(() => {
+    if (user && id) handleJoin();
+  }, [user, id, handleJoin]);
 
   const targetId = proposalId || id;
 

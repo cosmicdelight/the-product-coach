@@ -1,5 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { LandingPage } from './pages/LandingPage';
@@ -16,14 +15,6 @@ import { ProposalReviewPage } from './pages/ProposalReviewPage';
 import { JoinProposalPage } from './pages/JoinProposalPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { useAuth } from './contexts/AuthContext';
-
-function NavigationLogger() {
-  const location = useLocation();
-  useEffect(() => {
-    console.log('[Nav]', location.pathname, location.search);
-  }, [location]);
-  return null;
-}
 
 function DashboardRedirect() {
   const { activeRole, profile, loading } = useAuth();
@@ -49,7 +40,6 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <NavigationLogger />
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />

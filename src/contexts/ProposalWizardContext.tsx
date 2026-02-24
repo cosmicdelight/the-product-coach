@@ -83,14 +83,6 @@ export function ProposalWizardProvider({ children }: { children: React.ReactNode
   }, [currentStep]);
 
   useEffect(() => {
-    if (id) {
-      loadProposal(id);
-    } else {
-      setLoading(false);
-    }
-  }, [id]);
-
-  useEffect(() => {
     return () => {
       if (proposal && !savedRef.current) {
         supabase.from('proposals').delete().eq('id', proposal.id);
@@ -147,7 +139,7 @@ export function ProposalWizardProvider({ children }: { children: React.ReactNode
     channelRef.current = channel;
   };
 
-  const loadProposal = async (proposalId: string) => {
+  const loadProposal = useCallback(async (proposalId: string) => {
     savedRef.current = true;
     try {
       const { data: p, error } = await supabase.from('proposals').select('*').eq('id', proposalId).maybeSingle();
@@ -175,18 +167,23 @@ export function ProposalWizardProvider({ children }: { children: React.ReactNode
     } finally {
       setLoading(false);
     }
-  };
+  }, [profile, user]);
+
+  useEffect(() => {
+    if (id) {
+      loadProposal(id);
+    } else {
+      setLoading(false);
+    }
+  }, [id, loadProposal]);
 
   const loadCollaborators = async (proposalId: string) => {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('proposal_collaborators')
       .select('*, profile:profiles!proposal_collaborators_user_id_fkey(*)')
       .eq('proposal_id', proposalId)
       .neq('status', 'removed')
       .order('created_at', { ascending: true });
-    console.log('[loadCollaborators] proposalId:', proposalId);
-    console.log('[loadCollaborators] data:', data);
-    console.log('[loadCollaborators] error:', error);
     setCollaborators((data || []) as ProposalCollaboratorWithProfile[]);
   };
 

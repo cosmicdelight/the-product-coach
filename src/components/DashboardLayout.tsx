@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Lightbulb, LayoutDashboard, Bell, LogOut, Menu, X, User, ChevronDown, ArrowLeftRight, Settings, Calendar } from 'lucide-react';
@@ -15,6 +15,16 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [notifOpen, setNotifOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
+  const fetchUnreadCount = useCallback(async () => {
+    if (!user) return;
+    const { count } = await supabase
+      .from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('read', false);
+    setUnreadCount(count ?? 0);
+  }, [user]);
+
   useEffect(() => {
     if (!user) return;
     fetchUnreadCount();
@@ -25,17 +35,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [user]);
-
-  async function fetchUnreadCount() {
-    if (!user) return;
-    const { count } = await supabase
-      .from('notifications')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', user.id)
-      .eq('read', false);
-    setUnreadCount(count ?? 0);
-  }
+  }, [user, fetchUnreadCount]);
 
   const isOrganizer = activeRole === 'organizer';
   const dashPath = isOrganizer ? '/organizer/dashboard' : '/officer/dashboard';

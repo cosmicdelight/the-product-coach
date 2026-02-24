@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '../components/DashboardLayout';
 import { EventFormModal } from '../components/events/EventFormModal';
@@ -40,11 +40,7 @@ export function EventDetailPage() {
   const [proposalFilter, setProposalFilter] = useState<ProposalStatus | 'all'>('all');
   const [isOwner, setIsOwner] = useState(false);
 
-  useEffect(() => {
-    if (id) { loadEvent(); loadProposals(); }
-  }, [id]);
-
-  const loadEvent = async () => {
+  const loadEvent = useCallback(async () => {
     const { data } = await supabase
       .from('events')
       .select('*')
@@ -55,9 +51,9 @@ export function EventDetailPage() {
       setIsOwner(data.created_by === user?.id);
     }
     setLoading(false);
-  };
+  }, [id, user?.id]);
 
-  const loadProposals = async () => {
+  const loadProposals = useCallback(async () => {
     const { data, error } = await supabase
       .from('proposals')
       .select('*, profile:profiles!proposals_user_id_fkey(*)')
@@ -66,7 +62,11 @@ export function EventDetailPage() {
       .order('updated_at', { ascending: false });
     if (error) console.error('EventDetailPage proposals error:', error);
     setProposals((data as ProposalWithProfile[]) || []);
-  };
+  }, [id]);
+
+  useEffect(() => {
+    if (id) { loadEvent(); loadProposals(); }
+  }, [id, loadEvent, loadProposals]);
 
   const filteredProposals = proposalFilter === 'all'
     ? proposals

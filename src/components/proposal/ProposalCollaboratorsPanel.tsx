@@ -250,11 +250,8 @@ export function ProposalCollaboratorsPanel() {
       });
   }, [proposal?.user_id]);
 
-  console.log('[CollaboratorsPanel] user.id:', user?.id, 'proposal.user_id:', proposal?.user_id, 'collaborators:', collaborators);
-
   const active = collaborators.filter(c => c.status === 'active');
   const pending = collaborators.filter(c => c.status === 'pending');
-  console.log('[CollaboratorsPanel] active:', active, 'pending:', pending);
 
   const handleRemove = async (id: string) => {
     setRemoving(id);

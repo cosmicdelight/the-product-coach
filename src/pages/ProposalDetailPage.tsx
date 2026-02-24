@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { DashboardLayout } from '../components/DashboardLayout';
 import { useAuth } from '../contexts/AuthContext';
@@ -19,9 +19,7 @@ export function ProposalDetailPage() {
   const [newComment, setNewComment] = useState('');
   const [posting, setPosting] = useState(false);
 
-  useEffect(() => { if (id) load(); }, [id]);
-
-  const load = async () => {
+  const load = useCallback(async () => {
     if (!id) return;
     try {
       const { data: p } = await supabase.from('proposals').select('*').eq('id', id).single();
@@ -35,7 +33,9 @@ export function ProposalDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => { if (id) load(); }, [id, load]);
 
   const toggleSection = (key: string) => {
     setExpanded(prev => {

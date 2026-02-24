@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '../components/DashboardLayout';
 import { useAuth } from '../contexts/AuthContext';
@@ -33,14 +33,7 @@ export function OrganizerDashboard() {
   const [filter, setFilter] = useState<ProposalStatus | 'all'>('all');
   const [claiming, setClaiming] = useState<string | null>(null);
 
-  useEffect(() => { loadData(); }, []);
-
-  const loadData = async () => {
-    await Promise.all([loadProposals(), loadEvents()]);
-    setLoading(false);
-  };
-
-  const loadProposals = async () => {
+  const loadProposals = useCallback(async () => {
     const { data, error } = await supabase
       .from('proposals')
       .select('*, profile:profiles!proposals_user_id_fkey(*)')
@@ -48,9 +41,9 @@ export function OrganizerDashboard() {
       .order('updated_at', { ascending: false });
     if (error) console.error('OrganizerDashboard load error:', error);
     setProposals(data || []);
-  };
+  }, []);
 
-  const loadEvents = async () => {
+  const loadEvents = useCallback(async () => {
     const { data, error } = await supabase
       .from('events')
       .select('id, title, status, proposals(count)')
@@ -65,7 +58,14 @@ export function OrganizerDashboard() {
       proposal_count: row.proposals?.[0]?.count ?? 0,
     }));
     setEvents(mapped);
-  };
+  }, []);
+
+  const loadData = useCallback(async () => {
+    await Promise.all([loadProposals(), loadEvents()]);
+    setLoading(false);
+  }, [loadEvents, loadProposals]);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   const claimProposal = async (proposal: ProposalWithProfile) => {
     if (!user) return;

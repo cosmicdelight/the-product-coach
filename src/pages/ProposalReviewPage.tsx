@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { DashboardLayout } from '../components/DashboardLayout';
 import { useAuth } from '../contexts/AuthContext';
@@ -33,9 +33,7 @@ export function ProposalReviewPage() {
   const [reviewNotes, setReviewNotes] = useState('');
   const [scoresModified, setScoresModified] = useState(false);
 
-  useEffect(() => { if (id) load(); }, [id]);
-
-  const load = async () => {
+  const load = useCallback(async () => {
     if (!id) return;
     try {
       const { data: p } = await supabase.from('proposals').select('*').eq('id', id).single();
@@ -63,7 +61,9 @@ export function ProposalReviewPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => { if (id) load(); }, [id, load]);
 
   const isMyClaim = proposal?.assigned_reviewer_id === user?.id;
   const isClaimedByOther = proposal?.status === 'under_review' && proposal.assigned_reviewer_id && !isMyClaim;

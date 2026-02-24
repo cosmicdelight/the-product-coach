@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { DashboardLayout } from '../components/DashboardLayout';
 import { useAuth } from '../contexts/AuthContext';
@@ -36,11 +36,7 @@ export function OfficerDashboard() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => {
-    if (user) { loadProposals(); loadOpenEvents(); }
-  }, [user]);
-
-  const loadProposals = async () => {
+  const loadProposals = useCallback(async () => {
     if (!user) return;
     try {
       const [{ data: owned }, { data: shared }] = await Promise.all([
@@ -83,9 +79,9 @@ export function OfficerDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
-  const loadOpenEvents = async () => {
+  const loadOpenEvents = useCallback(async () => {
     const { data } = await supabase
       .from('events')
       .select('*')
@@ -93,7 +89,11 @@ export function OfficerDashboard() {
       .order('end_date', { ascending: true, nullsFirst: false })
       .limit(3);
     setOpenEvents(data || []);
-  };
+  }, []);
+
+  useEffect(() => {
+    if (user) { loadProposals(); loadOpenEvents(); }
+  }, [user, loadProposals, loadOpenEvents]);
 
   const deleteProposal = async (id: string) => {
     setDeleting(true);
