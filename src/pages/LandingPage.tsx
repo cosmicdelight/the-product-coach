@@ -373,7 +373,7 @@ export function LandingPage() {
       <section className="py-20 px-4 bg-white">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl font-bold text-gray-900 text-center mb-4">Built for Your Whole Organisation</h2>
-          <p className="text-gray-500 text-center mb-12 max-w-xl mx-auto">Two roles, one platform. Innovators build proposals; Organisers manage events, review submissions, and approve funding.</p>
+          <p className="text-gray-500 text-center mb-12 max-w-xl mx-auto">Two roles, one platform. Innovators build proposals. Innovation enablers manage events and review submissions.</p>
           <div className="grid md:grid-cols-2 gap-8">
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-2">
