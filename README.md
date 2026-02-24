@@ -47,6 +47,7 @@ Open the URL shown in terminal (typically `http://localhost:5173`).
 - `VITE_*` variables are bundled client-side and are public at runtime.
 - Only use `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in frontend.
 - Any AI or privileged API keys must be handled server-side.
+- Configure `OPENAI_API_KEY` as a secret in Supabase Edge Functions (for `ai-proxy`).
 
 ## CI Quality Gate
 

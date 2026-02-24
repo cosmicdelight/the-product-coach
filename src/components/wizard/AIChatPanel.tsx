@@ -148,7 +148,6 @@ export function AIChatPanel({ proposalId, sectionType, fieldValues, onGetFeedbac
 
   const config = SECTION_CHAT_CONFIG[sectionType];
   const sectionLabel = SECTION_LABELS[sectionType];
-  const apiKey = import.meta.env.VITE_OPENAI_API_KEY || '';
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 60);
@@ -297,7 +296,7 @@ export function AIChatPanel({ proposalId, sectionType, fieldValues, onGetFeedbac
       }));
     history.push({ role: 'user', text: text.trim() });
 
-    const reply = await getChatReply(history, sectionType, fieldValues, apiKey);
+    const reply = await getChatReply(history, sectionType, fieldValues);
 
     const replyContent: ChatMessageContent = { type: 'text', text: reply };
     const replyMsg = makeLocalMessage('assistant', replyContent);
@@ -308,7 +307,7 @@ export function AIChatPanel({ proposalId, sectionType, fieldValues, onGetFeedbac
       const saved = await saveChatMessage(proposalId, sectionType, 'assistant', replyContent);
       if (saved) setMessages(prev => prev.map(m => m.id === replyMsg.id ? saved : m));
     }
-  }, [messages, sectionType, fieldValues, proposalId, loading, thinking, apiKey]);
+  }, [messages, sectionType, fieldValues, proposalId, loading, thinking]);
 
   const handleRate = useCallback(async (id: string, r: 1 | -1) => {
     setRatedIds(prev => ({ ...prev, [id]: r }));

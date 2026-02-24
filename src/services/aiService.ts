@@ -1,6 +1,7 @@
 import { SectionType } from '../types/database';
 import { FeedbackPayload, ChatMessageContent } from '../types/chat';
 import { captureError } from './errorHandling';
+import { supabase } from '../lib/supabase';
 
 interface AIPromptConfig {
   systemPrompt: string;
@@ -751,10 +752,13 @@ function reviewProblemIdentification(
 }
 
 class AIService {
-  private apiKey: string;
-
-  constructor() {
-    this.apiKey = import.meta.env.VITE_OPENAI_API_KEY || '';
+  private async callAIProxy(body: Record<string, unknown>): Promise<string> {
+    const { data, error } = await supabase.functions.invoke('ai-proxy', { body });
+    if (error) throw error;
+    if (!data || typeof data.content !== 'string') {
+      throw new Error('Invalid AI proxy response');
+    }
+    return data.content;
   }
 
   async generateSuggestion(
@@ -762,7 +766,23 @@ class AIService {
     input: string,
     additionalContext?: Record<string, string>
   ): Promise<string> {
-    if (!this.apiKey) {
+    const config = SECTION_PROMPTS[sectionType];
+    let userPrompt = config.userPromptTemplate.replace('{input}', input);
+    if (additionalContext) {
+      Object.entries(additionalContext).forEach(([k, v]) => {
+        userPrompt = userPrompt.replace(`{${k}}`, v);
+      });
+    }
+
+    try {
+      return await this.callAIProxy({
+        mode: 'suggestion',
+        sectionType,
+        systemPrompt: config.systemPrompt,
+        userPrompt,
+      });
+    } catch (error) {
+      captureError('ai', 'generate_suggestion_failed', error, { sectionType });
       await new Promise(resolve => setTimeout(resolve, 800));
       if (sectionType === 'problem_identification') {
         return reviewProblemIdentification(
@@ -806,40 +826,6 @@ class AIService {
       if (sectionType === 'executive_summary') {
         return generateExecutiveSummaryFallback(additionalContext ?? {});
       }
-      return FALLBACKS[sectionType];
-    }
-
-    const config = SECTION_PROMPTS[sectionType];
-    let userPrompt = config.userPromptTemplate.replace('{input}', input);
-    if (additionalContext) {
-      Object.entries(additionalContext).forEach(([k, v]) => {
-        userPrompt = userPrompt.replace(`{${k}}`, v);
-      });
-    }
-
-    try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.apiKey}`,
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [
-            { role: 'system', content: config.systemPrompt },
-            { role: 'user', content: userPrompt },
-          ],
-          temperature: 0.7,
-          max_tokens: 1200,
-        }),
-      });
-
-      if (!response.ok) throw new Error('API error');
-      const data = await response.json();
-      return data.choices[0]?.message?.content || FALLBACKS[sectionType];
-    } catch (error) {
-      captureError('ai', 'generate_suggestion_failed', error, { sectionType });
       return FALLBACKS[sectionType];
     }
   }
@@ -931,8 +917,7 @@ const CHAT_SYSTEM_PROMPT = `You are an expert AI coach helping public officers w
 export async function getChatReply(
   conversationHistory: { role: 'user' | 'assistant'; text: string }[],
   sectionType: SectionType,
-  currentFieldValues: Record<string, string>,
-  apiKey: string
+  currentFieldValues: Record<string, string>
 ): Promise<string> {
   const fieldContext = Object.entries(currentFieldValues)
     .filter(([, v]) => v.trim().length > 0)
@@ -946,7 +931,21 @@ export async function getChatReply(
     ...conversationHistory.map(m => ({ role: m.role, content: m.text })),
   ];
 
-  if (!apiKey) {
+  try {
+    const { data, error } = await supabase.functions.invoke('ai-proxy', {
+      body: {
+        mode: 'chat',
+        sectionType,
+        messages,
+      },
+    });
+    if (error) throw error;
+    if (!data || typeof data.content !== 'string') {
+      throw new Error('Invalid AI proxy response');
+    }
+    return data.content;
+  } catch (error) {
+    captureError('ai', 'chat_reply_failed', error, { sectionType });
     await new Promise(resolve => setTimeout(resolve, 600));
     const userMessages = conversationHistory.filter(m => m.role === 'user');
     const lastUserMsg = userMessages[userMessages.length - 1]?.text?.toLowerCase() ?? '';
@@ -956,28 +955,6 @@ export async function getChatReply(
     if (lastUserMsg.includes('specific') || lastUserMsg.includes('quantif')) {
       return "For the Current Impact field, aim to include: (1) a number — how many people affected or how much time/cost is lost, (2) a frequency — per week, per proposal cycle, per year, and (3) a citation if you have one. For example: \"Officers spend an estimated 20–40 hours per proposal cycle on drafting, with no self-service support available.\" Even rough estimates are better than vague language like \"many\" or \"significant\".";
     }
-    return "That's a good question. The key is to be specific and tie your points back to named programmes and real user groups (public officers, programme organisers). Would you like me to review what you've written so far? Click **Get Feedback** when your fields are filled in.";
-  }
-
-  try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages,
-        temperature: 0.7,
-        max_tokens: 600,
-      }),
-    });
-    if (!response.ok) throw new Error('API error');
-    const data = await response.json();
-    return data.choices[0]?.message?.content ?? "I couldn't generate a response. Please try again.";
-  } catch (error) {
-    captureError('ai', 'chat_reply_failed', error, { sectionType });
     return "I couldn't connect to the AI service right now. Please check your connection and try again.";
   }
 }

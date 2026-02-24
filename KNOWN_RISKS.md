@@ -2,15 +2,15 @@
 
 Last updated: 2026-02-24
 
-## Risk 1: Frontend AI key path still present
+## Risk 1: Edge function secret/config drift
 
-- **Area:** `src/services/aiService.ts`
+- **Area:** `supabase/functions/ai-proxy/index.ts`
 - **Severity:** High
-- **Why it matters:** `VITE_OPENAI_API_KEY` usage in frontend can expose key material if configured.
-- **Current status:** Fallback behavior exists, but secure backend proxy migration is not fully complete.
+- **Why it matters:** If `OPENAI_API_KEY` is missing or rotated incorrectly in Supabase secrets, AI features degrade.
+- **Current status:** Frontend key path removed; AI now routes through edge proxy.
 - **Owner:** Product + Engineering
 - **Target date:** 2026-03-06
-- **Mitigation plan:** Move all OpenAI calls to backend/edge function and remove client key dependency.
+- **Mitigation plan:** Keep runbook for secret rotation, monitor edge function failures, and validate staging/prod secrets during releases.
 
 ## Risk 2: Hook dependency lint warnings remain
 
