@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Send, ThumbsUp, ThumbsDown, Sparkles, Trash2, MessageSquare, Loader } from 'lucide-react';
+import { TutorialTarget } from '../tutorial/TutorialTarget';
 import { SectionType } from '../../types/database';
 import { ChatMessage, ChatMessageContent, FieldSnapshot } from '../../types/chat';
 import { SECTION_CHAT_CONFIG } from '../../config/sectionChatConfig';
@@ -335,7 +336,7 @@ export function AIChatPanel({ proposalId, sectionType, fieldValues, onGetFeedbac
   };
 
   return (
-    <div className="flex flex-col h-full bg-white border-l border-gray-200">
+    <TutorialTarget tutorialId="wizard-ai-chat-panel" className="flex flex-col h-full bg-white border-l border-gray-200">
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 flex-shrink-0">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
@@ -457,6 +458,6 @@ export function AIChatPanel({ proposalId, sectionType, fieldValues, onGetFeedbac
           </button>
         </div>
       </div>
-    </div>
+    </TutorialTarget>
   );
 }

@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight, Save } from 'lucide-react';
+import { TutorialTarget } from '../tutorial/TutorialTarget';
 
 interface Props {
   currentStep: number;
@@ -13,7 +14,7 @@ interface Props {
 
 export function StepNav({ currentStep, canProceed, saving, onSave, onSaveAndContinue, onBack, isLastStep, submitLabel }: Props) {
   return (
-    <div className="flex items-center justify-between pt-6 border-t border-gray-200 mt-8">
+    <TutorialTarget tutorialId="wizard-step-nav" className="flex items-center justify-between pt-6 border-t border-gray-200 mt-8">
       <div className="flex items-center gap-3">
         {currentStep > 1 && (
           <button
@@ -45,6 +46,6 @@ export function StepNav({ currentStep, canProceed, saving, onSave, onSaveAndCont
         {saving ? 'Saving...' : (submitLabel || 'Save & Continue')}
         {!isLastStep && <ChevronRight className="h-4 w-4" />}
       </button>
-    </div>
+    </TutorialTarget>
   );
 }

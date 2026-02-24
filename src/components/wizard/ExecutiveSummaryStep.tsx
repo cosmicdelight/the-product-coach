@@ -5,6 +5,7 @@ import { CheckCircle, Circle, Sparkles, Loader, MessageSquare } from 'lucide-rea
 import { StepNav } from './StepNav';
 import { PresenceIndicator } from '../proposal/PresenceIndicator';
 import { LastEditedBy } from '../proposal/LastEditedBy';
+import { TutorialTarget } from '../tutorial/TutorialTarget';
 
 const SECTION_LABELS: Record<string, string> = {
   problem_identification: 'Problem Identification',
@@ -116,7 +117,7 @@ export function ExecutiveSummaryStep({ onGetFeedback, onFieldsChange }: Props) {
         )}
       </div>
 
-      <div>
+      <TutorialTarget tutorialId="wizard-executive-summary">
         <div className="flex items-center justify-between mb-1.5">
           <label className="block text-sm font-medium text-gray-700">
             Executive Summary <span className="text-red-500">*</span>
@@ -141,7 +142,7 @@ export function ExecutiveSummaryStep({ onGetFeedback, onFieldsChange }: Props) {
           placeholder="A concise overview covering: the problem, who is affected, the opportunity framing, and what success looks like for those people..."
         />
         <p className="text-xs text-gray-400 mt-1">Target 200–300 words. Focus on the problem and its human impact.</p>
-      </div>
+      </TutorialTarget>
 
       {onGetFeedback && (
         <div className="flex justify-end">
@@ -159,16 +160,18 @@ export function ExecutiveSummaryStep({ onGetFeedback, onFieldsChange }: Props) {
         <LastEditedBy proposalId={proposal.id} sectionType="executive_summary" />
       )}
 
-      <StepNav
-        currentStep={currentStep}
-        canProceed={!!summary.trim()}
-        saving={saving || submitting}
-        onSave={handleSave}
-        onSaveAndContinue={handleSubmit}
-        onBack={previousStep}
-        isLastStep
-        submitLabel={submitting ? 'Submitting...' : allComplete ? 'Submit for Review' : 'Save Draft'}
-      />
+      <TutorialTarget tutorialId="wizard-submit-btn">
+        <StepNav
+          currentStep={currentStep}
+          canProceed={!!summary.trim()}
+          saving={saving || submitting}
+          onSave={handleSave}
+          onSaveAndContinue={handleSubmit}
+          onBack={previousStep}
+          isLastStep
+          submitLabel={submitting ? 'Submitting...' : allComplete ? 'Submit for Review' : 'Save Draft'}
+        />
+      </TutorialTarget>
     </div>
   );
 }

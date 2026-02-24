@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { DashboardLayout } from '../components/DashboardLayout';
 import { useAuth } from '../contexts/AuthContext';
+import { TutorialTarget } from '../components/tutorial/TutorialTarget';
 import { supabase } from '../lib/supabase';
 import { Proposal, ProposalStatus, Event, ProposalCollaboratorWithProfile } from '../types/database';
 import {
@@ -133,19 +134,22 @@ export function OfficerDashboard() {
     <DashboardLayout>
       <div className="space-y-8">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Welcome back, {profile?.full_name?.split(' ')[0]}
-            </h1>
-
-          </div>
-          <Link
-            to="/proposals/new"
-            className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-blue-700 transition-colors text-sm shadow-sm"
-          >
-            <Plus className="h-4 w-4" />
-            New Proposal
-          </Link>
+          <TutorialTarget tutorialId="dashboard-welcome">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Welcome back, {profile?.full_name?.split(' ')[0]}
+              </h1>
+            </div>
+          </TutorialTarget>
+          <TutorialTarget tutorialId="dashboard-new-proposal" as="span">
+            <Link
+              to="/proposals/new"
+              className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-blue-700 transition-colors text-sm shadow-sm"
+            >
+              <Plus className="h-4 w-4" />
+              New Proposal
+            </Link>
+          </TutorialTarget>
         </div>
 
         {openEvents.length > 0 && (
@@ -268,7 +272,7 @@ export function OfficerDashboard() {
             )}
           </div>
         ) : (
-          <div className="grid gap-4">
+          <TutorialTarget tutorialId="dashboard-proposal-list" className="grid gap-4">
             {filtered.map(proposal => {
               const cfg = STATUS_CONFIG[proposal.status];
               const isOwner = proposal.user_id === user?.id;
@@ -359,7 +363,7 @@ export function OfficerDashboard() {
                 </div>
               );
             })}
-          </div>
+          </TutorialTarget>
 
         )}
       </div>

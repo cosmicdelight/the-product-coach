@@ -4,6 +4,7 @@ import { StepNav } from './StepNav';
 import { MessageSquare } from 'lucide-react';
 import { PresenceIndicator } from '../proposal/PresenceIndicator';
 import { LastEditedBy } from '../proposal/LastEditedBy';
+import { TutorialTarget } from '../tutorial/TutorialTarget';
 
 interface Props {
   onGetFeedback?: () => void;
@@ -62,7 +63,7 @@ export function ProblemIdentificationStep({ onGetFeedback, onFieldsChange }: Pro
         />
       </div>
 
-      <div>
+      <TutorialTarget tutorialId="wizard-problem-statement">
         <label className="block text-sm font-medium text-gray-700 mb-1.5">
           Problem Statement <span className="text-red-500">*</span>
           <PresenceIndicator fieldName="problemStatement" presenceList={presenceList} />
@@ -76,7 +77,7 @@ export function ProblemIdentificationStep({ onGetFeedback, onFieldsChange }: Pro
           className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-none"
           placeholder="Describe the problem in detail. What is happening? Why is it a problem? What are the consequences?"
         />
-      </div>
+      </TutorialTarget>
 
       <div className="grid gap-5">
         <div>
@@ -113,13 +114,15 @@ export function ProblemIdentificationStep({ onGetFeedback, onFieldsChange }: Pro
 
       {onGetFeedback && (
         <div className="flex justify-end">
-          <button
-            onClick={onGetFeedback}
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors"
-          >
-            <MessageSquare className="h-4 w-4" />
-            Get Feedback
-          </button>
+          <TutorialTarget tutorialId="wizard-get-feedback-btn" as="span">
+            <button
+              onClick={onGetFeedback}
+              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors"
+            >
+              <MessageSquare className="h-4 w-4" />
+              Get Feedback
+            </button>
+          </TutorialTarget>
         </div>
       )}
 

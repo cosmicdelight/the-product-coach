@@ -1,6 +1,11 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { DemoTutorialProvider } from './contexts/DemoTutorialContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { DemoBanner } from './components/tutorial/DemoBanner';
+import { TutorialOverlay } from './components/tutorial/TutorialOverlay';
+import { DemoWelcomeModal } from './components/tutorial/DemoWelcomeModal';
+import { TutorialCompleteModal } from './components/tutorial/TutorialCompleteModal';
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
@@ -40,6 +45,11 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <DemoTutorialProvider>
+          <DemoBanner />
+          <TutorialOverlay />
+          <DemoWelcomeModal />
+          <TutorialCompleteModal />
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
@@ -147,6 +157,7 @@ export default function App() {
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </DemoTutorialProvider>
       </AuthProvider>
     </BrowserRouter>
   );

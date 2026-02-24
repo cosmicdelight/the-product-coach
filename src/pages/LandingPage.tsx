@@ -1,10 +1,12 @@
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Lightbulb, Target, Zap, ArrowRight, TrendingUp, Users, Shield,
   MessageSquare, CheckCircle2, Bot, FileText, BarChart3, Bell,
-  Star, GitBranch, ClipboardCheck, UserPlus, Calendar, PlusCircle,
-  ChevronRight, ClipboardList
+  Star, GitBranch, ClipboardCheck, Calendar, PlusCircle,
+  ChevronRight, ClipboardList, FlaskConical,
 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 function WizardStepsMockup() {
   const steps = [
@@ -176,6 +178,19 @@ function OrganizerMockup() {
 }
 
 export function LandingPage() {
+  const { signIn } = useAuth();
+  const navigate = useNavigate();
+  const [demoLoading, setDemoLoading] = useState(false);
+
+  const handleTryDemo = async () => {
+    setDemoLoading(true);
+    const { error } = await signIn('demo@productcoach.app', 'DemoUser2024!');
+    if (!error) {
+      navigate('/officer/dashboard');
+    }
+    setDemoLoading(false);
+  };
+
   return (
     <div className="min-h-screen bg-white">
       <nav className="bg-white border-b border-gray-100 sticky top-0 z-50">
@@ -188,6 +203,14 @@ export function LandingPage() {
               <span className="text-xl font-bold text-gray-900">Product Coach</span>
             </div>
             <div className="flex items-center gap-3">
+              <button
+                onClick={handleTryDemo}
+                disabled={demoLoading}
+                className="hidden sm:flex items-center gap-1.5 text-gray-600 hover:text-blue-600 font-medium text-sm transition-colors disabled:opacity-50"
+              >
+                <FlaskConical className="h-4 w-4" />
+                {demoLoading ? 'Loading...' : 'Try Demo'}
+              </button>
               <Link to="/login" className="text-gray-600 hover:text-gray-900 font-medium text-sm transition-colors">
                 Sign In
               </Link>
@@ -218,9 +241,14 @@ export function LandingPage() {
               Start Building Your Proposal
               <ArrowRight className="h-5 w-5" />
             </Link>
-            <Link to="/login" className="flex items-center justify-center gap-2 bg-white text-gray-700 px-8 py-4 rounded-xl font-semibold text-lg border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors">
-              Sign In
-            </Link>
+            <button
+              onClick={handleTryDemo}
+              disabled={demoLoading}
+              className="flex items-center justify-center gap-2 bg-white text-gray-700 px-8 py-4 rounded-xl font-semibold text-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 transition-colors disabled:opacity-50"
+            >
+              <FlaskConical className="h-5 w-5" />
+              {demoLoading ? 'Loading Demo...' : 'Try the Demo'}
+            </button>
           </div>
           <div className="max-w-3xl mx-auto">
             <WizardStepsMockup />
