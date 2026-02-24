@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 import { captureError, toAppError } from '../services/errorHandling';
@@ -62,6 +62,7 @@ export function ProposalWizardProvider({ children }: { children: React.ReactNode
   const { user, profile } = useAuth();
   const { id } = useParams();
   const navigate = useNavigate();
+  const { search } = useLocation();
   const [proposal, setProposal] = useState<Proposal | null>(null);
   const [sections, setSections] = useState<Record<string, ProposalSection>>({});
   const [currentStep, setCurrentStep] = useState(1);
@@ -177,6 +178,19 @@ export function ProposalWizardProvider({ children }: { children: React.ReactNode
       setLoading(false);
     }
   }, [id, loadProposal]);
+
+  useEffect(() => {
+    if (loading) return;
+    const params = new URLSearchParams(search);
+    const wizardStep = params.get('wizardStep');
+    if (wizardStep) {
+      const step = parseInt(wizardStep, 10);
+      if (step >= 1 && step <= 6) {
+        setCurrentStep(step);
+        currentStepRef.current = step;
+      }
+    }
+  }, [loading, search]);
 
   const loadCollaborators = async (proposalId: string) => {
     const { data, error } = await supabase
