@@ -1,10 +1,17 @@
 import { BookOpen, Compass, Building2, Briefcase } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useDemoTutorial } from '../../contexts/DemoTutorialContext';
 
 export function DemoWelcomeModal() {
   const { isDemo, showWelcomeModal, startTutorial, dismissWelcomeModal } = useDemoTutorial();
+  const navigate = useNavigate();
 
   if (!isDemo || !showWelcomeModal) return null;
+
+  const handleExploreOnMyOwn = () => {
+    dismissWelcomeModal();
+    navigate('/officer/dashboard');
+  };
 
   return (
     <div className="fixed inset-0 z-[9500] flex items-center justify-center px-4">
@@ -54,7 +61,7 @@ export function DemoWelcomeModal() {
               Start Guided Tutorial
             </button>
             <button
-              onClick={dismissWelcomeModal}
+              onClick={handleExploreOnMyOwn}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-medium text-gray-600 border border-gray-200 hover:bg-gray-50 transition-colors text-sm"
             >
               <Compass className="h-4 w-4" />
