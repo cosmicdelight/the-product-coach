@@ -3,6 +3,7 @@ import { X, Calendar, FileText, Tag } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { Event, EventStatus } from '../../types/database';
+import { captureError, mapErrorToUserMessage } from '../../services/errorHandling';
 
 interface Props {
   event?: Event;
@@ -65,7 +66,8 @@ export function EventFormModal({ event, onClose, onSaved }: Props) {
         onSaved(data);
       }
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Something went wrong');
+      captureError('events', 'save_event_failed', e, { eventId: event?.id ?? null, mode: event ? 'edit' : 'create' });
+      setError(mapErrorToUserMessage(e, 'Unable to save event right now.'));
     } finally {
       setSaving(false);
     }

@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useRef, useCallback } f
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
+import { captureError, toAppError } from '../services/errorHandling';
 import {
   Proposal, ProposalSection, SectionType,
   ProposalCollaboratorWithProfile, PresenceUser,
@@ -144,7 +145,7 @@ export function ProposalWizardProvider({ children }: { children: React.ReactNode
     try {
       const { data: p, error } = await supabase.from('proposals').select('*').eq('id', proposalId).maybeSingle();
       if (error || !p) {
-        console.error('Error loading proposal:', error);
+        captureError('proposal', 'load_proposal_failed', error ?? new Error('Proposal not found'), { proposalId });
         setLoading(false);
         return;
       }
@@ -163,7 +164,7 @@ export function ProposalWizardProvider({ children }: { children: React.ReactNode
       await loadCollaborators(proposalId);
       setupPresenceChannel(proposalId);
     } catch (e) {
-      console.error('Error loading proposal:', e);
+      captureError('proposal', 'load_proposal_failed', e, { proposalId });
     } finally {
       setLoading(false);
     }
@@ -178,12 +179,16 @@ export function ProposalWizardProvider({ children }: { children: React.ReactNode
   }, [id, loadProposal]);
 
   const loadCollaborators = async (proposalId: string) => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('proposal_collaborators')
       .select('*, profile:profiles!proposal_collaborators_user_id_fkey(*)')
       .eq('proposal_id', proposalId)
       .neq('status', 'removed')
       .order('created_at', { ascending: true });
+    if (error) {
+      captureError('proposal', 'load_collaborators_failed', error, { proposalId });
+      throw toAppError(error, 'Unable to load collaborators.');
+    }
     setCollaborators((data || []) as ProposalCollaboratorWithProfile[]);
   };
 
@@ -239,10 +244,14 @@ export function ProposalWizardProvider({ children }: { children: React.ReactNode
       if (sectionType === 'problem_identification' && content.problemStatement) {
         proposalUpdates.problem_statement = content.problemStatement;
       }
-      await supabase.from('proposals').update(proposalUpdates).eq('id', p.id);
+      const { error: proposalUpdateError } = await supabase.from('proposals').update(proposalUpdates).eq('id', p.id);
+      if (proposalUpdateError) throw proposalUpdateError;
       if (proposalUpdates.problem_statement !== undefined) {
         setProposal(prev => prev ? { ...prev, problem_statement: proposalUpdates.problem_statement! } : null);
       }
+    } catch (error) {
+      captureError('proposal', 'save_section_failed', error, { sectionType });
+      throw toAppError(error, 'Unable to save this section right now.');
     } finally {
       setSaving(false);
     }
@@ -251,20 +260,32 @@ export function ProposalWizardProvider({ children }: { children: React.ReactNode
   const updateTitle = async (title: string) => {
     const p = await ensureProposalExists();
     savedRef.current = true;
-    await supabase.from('proposals').update({ title }).eq('id', p.id);
+    const { error } = await supabase.from('proposals').update({ title }).eq('id', p.id);
+    if (error) {
+      captureError('proposal', 'update_title_failed', error, { proposalId: p.id });
+      throw toAppError(error, 'Unable to update proposal title.');
+    }
     setProposal(prev => prev ? { ...prev, title } : null);
   };
 
   const updateEventId = async (eventId: string | null) => {
     const p = await ensureProposalExists();
     savedRef.current = true;
-    await supabase.from('proposals').update({ event_id: eventId }).eq('id', p.id);
+    const { error } = await supabase.from('proposals').update({ event_id: eventId }).eq('id', p.id);
+    if (error) {
+      captureError('proposal', 'update_event_id_failed', error, { proposalId: p.id, eventId });
+      throw toAppError(error, 'Unable to update linked event.');
+    }
     setProposal(prev => prev ? { ...prev, event_id: eventId } : null);
   };
 
   const goToStep = async (step: number) => {
     if (!proposal || step < 1 || step > 6) return;
-    await supabase.from('proposals').update({ current_step: step }).eq('id', proposal.id);
+    const { error } = await supabase.from('proposals').update({ current_step: step }).eq('id', proposal.id);
+    if (error) {
+      captureError('proposal', 'update_step_failed', error, { proposalId: proposal.id, step });
+      throw toAppError(error, 'Unable to move to this step right now.');
+    }
     setCurrentStep(step);
     currentStepRef.current = step;
     setProposal(prev => prev ? { ...prev, current_step: step } : null);
@@ -294,7 +315,7 @@ export function ProposalWizardProvider({ children }: { children: React.ReactNode
 
     const activeCollabs = collaborators.filter(c => c.status === 'active' && c.user_id && c.user_id !== user?.id);
     if (activeCollabs.length > 0) {
-      await supabase.from('notifications').insert(
+      const { error: notificationError } = await supabase.from('notifications').insert(
         activeCollabs.map(c => ({
           user_id: c.user_id!,
           type: 'collaborator_submitted',
@@ -304,6 +325,12 @@ export function ProposalWizardProvider({ children }: { children: React.ReactNode
           read: false,
         }))
       );
+      if (notificationError) {
+        captureError('proposal', 'collaborator_submission_notification_failed', notificationError, {
+          proposalId: proposal.id,
+          recipientCount: activeCollabs.length,
+        });
+      }
     }
 
     navigate('/officer/dashboard');
@@ -344,12 +371,15 @@ export function ProposalWizardProvider({ children }: { children: React.ReactNode
 
   const logSectionEdit = async (sectionType: SectionType, fieldName: string) => {
     if (!user || !proposal) return;
-    await supabase.from('proposal_section_edits').insert({
+    const { error } = await supabase.from('proposal_section_edits').insert({
       proposal_id: proposal.id,
       section_type: sectionType,
       field_name: fieldName,
       edited_by: user.id,
     });
+    if (error) {
+      captureError('proposal', 'log_section_edit_failed', error, { proposalId: proposal.id, sectionType, fieldName });
+    }
   };
 
   return (

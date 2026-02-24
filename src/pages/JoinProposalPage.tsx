@@ -4,6 +4,7 @@ import { DashboardLayout } from '../components/DashboardLayout';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { CheckCircle, XCircle, Loader } from 'lucide-react';
+import { captureError, mapErrorToUserMessage } from '../services/errorHandling';
 
 type State = 'loading' | 'joining' | 'success' | 'already_member' | 'invalid' | 'wrong_email' | 'error';
 
@@ -33,7 +34,8 @@ export function JoinProposalPage() {
       });
 
       if (error) {
-        console.error('RPC error:', error);
+        captureError('proposal', 'accept_invite_rpc_failed', error, { proposalId: id });
+        setErrorMessage(mapErrorToUserMessage(error, 'Unable to process this invite right now.'));
         setState('error');
         return;
       }
@@ -93,7 +95,8 @@ export function JoinProposalPage() {
       setState('success');
       setTimeout(() => navigate(`/proposals/${result.proposal_id}/edit`), 1500);
     } catch (e) {
-      console.error('Join error:', e);
+      captureError('proposal', 'accept_invite_failed', e, { proposalId: id });
+      setErrorMessage(mapErrorToUserMessage(e, 'Unable to process this invite right now.'));
       setState('error');
     }
   }, [id, navigate, profile?.full_name, searchParams, user]);

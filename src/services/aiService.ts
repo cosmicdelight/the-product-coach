@@ -1,5 +1,6 @@
 import { SectionType } from '../types/database';
 import { FeedbackPayload, ChatMessageContent } from '../types/chat';
+import { captureError } from './errorHandling';
 
 interface AIPromptConfig {
   systemPrompt: string;
@@ -837,7 +838,8 @@ class AIService {
       if (!response.ok) throw new Error('API error');
       const data = await response.json();
       return data.choices[0]?.message?.content || FALLBACKS[sectionType];
-    } catch {
+    } catch (error) {
+      captureError('ai', 'generate_suggestion_failed', error, { sectionType });
       return FALLBACKS[sectionType];
     }
   }
@@ -974,7 +976,8 @@ export async function getChatReply(
     if (!response.ok) throw new Error('API error');
     const data = await response.json();
     return data.choices[0]?.message?.content ?? "I couldn't generate a response. Please try again.";
-  } catch {
+  } catch (error) {
+    captureError('ai', 'chat_reply_failed', error, { sectionType });
     return "I couldn't connect to the AI service right now. Please check your connection and try again.";
   }
 }

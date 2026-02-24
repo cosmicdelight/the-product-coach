@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { Profile, UserRole } from '../types/database';
+import { captureError, mapErrorToUserMessage, toAppError } from '../services/errorHandling';
 
 interface AuthContextType {
   user: User | null;
@@ -67,7 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
       }
     } catch (error) {
-      console.error('Failed to load profile:', error);
+      captureError('auth', 'load_profile_failed', error, { userId });
     } finally {
       setLoading(false);
     }
@@ -76,9 +77,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-      return { error: error ? new Error(error.message) : null };
+      return { error: error ? new Error(mapErrorToUserMessage(error, 'Unable to sign in.')) : null };
     } catch (error) {
-      return { error: error as Error };
+      captureError('auth', 'sign_in_failed', error, { email });
+      return { error: toAppError(error, 'Unable to sign in. Please try again.') };
     }
   };
 
@@ -115,7 +117,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       return { error: null };
     } catch (error) {
-      return { error: error as Error };
+      captureError('auth', 'sign_up_failed', error, { email });
+      return { error: toAppError(error, 'Unable to create your account. Please try again.') };
     }
   };
 
@@ -128,9 +131,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
-      return { error: error ? new Error(error.message) : null };
+      return { error: error ? new Error(mapErrorToUserMessage(error, 'Unable to send reset email.')) : null };
     } catch (error) {
-      return { error: error as Error };
+      captureError('auth', 'reset_password_failed', error, { email });
+      return { error: toAppError(error, 'Unable to send reset email. Please try again.') };
     }
   };
 
@@ -155,7 +159,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await loadProfile(user.id);
       return { error: null };
     } catch (error) {
-      return { error: error as Error };
+      captureError('auth', 'add_role_failed', error, { role, userId: user.id });
+      return { error: toAppError(error, 'Unable to add this role right now.') };
     }
   };
 
@@ -170,7 +175,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await loadProfile(user.id);
       return { error: null };
     } catch (error) {
-      return { error: error as Error };
+      captureError('auth', 'update_profile_failed', error, { userId: user.id });
+      return { error: toAppError(error, 'Unable to update profile right now.') };
     }
   };
 

@@ -4,6 +4,7 @@ import { useWizard } from '../../contexts/ProposalWizardContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { ProposalCollaboratorWithProfile, PresenceUser, Profile } from '../../types/database';
+import { captureError, mapErrorToUserMessage } from '../../services/errorHandling';
 
 function getInitials(name: string): string {
   return name
@@ -234,6 +235,7 @@ export function ProposalCollaboratorsPanel() {
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
   const [ownerProfile, setOwnerProfile] = useState<Profile | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const isOwner = proposal?.user_id === user?.id;
   const canManage = isOwner;
@@ -255,8 +257,12 @@ export function ProposalCollaboratorsPanel() {
 
   const handleRemove = async (id: string) => {
     setRemoving(id);
+    setActionError(null);
     try {
       await removeCollaborator(id);
+    } catch (error) {
+      captureError('proposal', 'remove_collaborator_failed', error, { collaboratorId: id });
+      setActionError(mapErrorToUserMessage(error, 'Unable to remove collaborator right now.'));
     } finally {
       setRemoving(null);
       setConfirmRemoveId(null);
@@ -266,9 +272,15 @@ export function ProposalCollaboratorsPanel() {
   const handleCopyLink = async (collab: ProposalCollaboratorWithProfile) => {
     const origin = window.location.origin;
     const url = `${origin}/proposals/${proposal?.id}/join?token=${collab.invite_token}`;
-    await navigator.clipboard.writeText(url);
-    setCopiedId(collab.id);
-    setTimeout(() => setCopiedId(null), 2000);
+    setActionError(null);
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedId(collab.id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch (error) {
+      captureError('proposal', 'copy_invite_link_failed', error, { collaboratorId: collab.id });
+      setActionError('Unable to copy invite link. Please copy it manually.');
+    }
   };
 
   const ownerName = ownerProfile?.full_name || proposal?.user_id?.slice(0, 8) || 'Owner';
@@ -369,6 +381,12 @@ export function ProposalCollaboratorsPanel() {
             </div>
           ))}
         </div>
+      )}
+
+      {actionError && (
+        <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-2.5 py-2 mt-2">
+          {actionError}
+        </p>
       )}
 
       {active.length === 0 && pending.length === 0 && !showInviteForm && isOwner && (
