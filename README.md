@@ -41,19 +41,6 @@ This app helps teams draft, review, and collaborate on structured innovation pro
 
 ---
 
-## Demo account
-
-Try the app without signing up:
-
-- **Email:** `demo@productcoach.example`
-- **Password:** `Demo123!`
-
-The demo account is read-only — you can view sample proposals but not create or edit.
-
-**Bolt Database:** See [docs/BOLT_DEMO_SETUP.md](docs/BOLT_DEMO_SETUP.md) for setup steps (create demo user in Bolt Auth, run migration, run seed).
-
----
-
 ## Getting started
 
 1. **Clone the repo**
