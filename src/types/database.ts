@@ -199,3 +199,63 @@ export interface PresenceUser {
   editingField: string | null;
   color: string;
 }
+
+export type TemplateFieldType = 'textarea' | 'text';
+
+export interface TemplateField {
+  id: string;
+  section_id: string;
+  field_key: string;
+  label: string;
+  placeholder: string;
+  field_type: TemplateFieldType;
+  required: boolean;
+  display_order: number;
+  ai_prompt_hint: string | null;
+  created_at: string;
+}
+
+export interface TemplateSection {
+  id: string;
+  template_id: string;
+  title: string;
+  description: string;
+  section_key: string;
+  display_order: number;
+  created_at: string;
+  fields?: TemplateField[];
+}
+
+export interface EventTemplate {
+  id: string;
+  event_id: string;
+  name: string;
+  description: string;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EventTemplateWithSections extends EventTemplate {
+  sections: (TemplateSection & { fields: TemplateField[] })[];
+}
+
+export interface TemplateSectionDraft {
+  id?: string;
+  title: string;
+  description: string;
+  section_key: string;
+  display_order: number;
+  fields: TemplateFieldDraft[];
+}
+
+export interface TemplateFieldDraft {
+  id?: string;
+  field_key: string;
+  label: string;
+  placeholder: string;
+  field_type: TemplateFieldType;
+  required: boolean;
+  display_order: number;
+  ai_prompt_hint: string | null;
+}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Calendar, ChevronDown, X, CheckCircle } from 'lucide-react';
+import { Calendar, ChevronDown, CheckCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useWizard } from '../../contexts/ProposalWizardContext';
 import { Event } from '../../types/database';
@@ -34,46 +34,49 @@ export function EventSelector() {
     setLoading(false);
   };
 
-  const handleSelect = async (event: Event | null) => {
+  const handleSelect = async (event: Event) => {
     setOpen(false);
     setSelectedEvent(event);
-    await updateEventId(event?.id ?? null);
+    await updateEventId(event.id);
   };
 
-  if (loading || events.length === 0) return null;
+  if (loading) return null;
+
+  if (events.length === 0) {
+    return (
+      <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-400">
+        <Calendar className="h-4 w-4 flex-shrink-0" />
+        <span>No open events available</span>
+      </div>
+    );
+  }
 
   return (
     <div className="relative">
       <button
         type="button"
-        onClick={() => setOpen(prev => !prev)}
+        onClick={() => !selectedEvent && setOpen(prev => !prev)}
         className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border text-sm transition-all ${
           selectedEvent
-            ? 'border-blue-500 bg-blue-50 text-blue-700'
+            ? 'border-blue-500 bg-blue-50 text-blue-700 cursor-default'
             : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
         }`}
       >
         <Calendar className="h-4 w-4 flex-shrink-0" />
-        <span className="truncate max-w-40">
-          {selectedEvent ? selectedEvent.title : 'Select event (optional)'}
+        <span className="truncate max-w-48">
+          {selectedEvent ? selectedEvent.title : 'Select event to submit to'}
         </span>
         {selectedEvent ? (
-          <button
-            type="button"
-            onClick={e => { e.stopPropagation(); handleSelect(null); }}
-            className="ml-1 text-blue-400 hover:text-blue-600 flex-shrink-0"
-          >
-            <X className="h-3.5 w-3.5" />
-          </button>
+          <CheckCircle className="h-3.5 w-3.5 text-blue-500 flex-shrink-0" />
         ) : (
           <ChevronDown className={`h-3.5 w-3.5 flex-shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
         )}
       </button>
 
       {open && (
-        <div className="absolute top-full left-0 mt-1 w-72 bg-white rounded-xl border border-gray-200 shadow-lg z-20 overflow-hidden">
+        <div className="absolute top-full left-0 mt-1 w-80 bg-white rounded-xl border border-gray-200 shadow-lg z-20 overflow-hidden">
           <div className="px-3 py-2 border-b border-gray-100">
-            <p className="text-xs font-medium text-gray-500">Submit to an open event</p>
+            <p className="text-xs font-medium text-gray-500">Choose an open event</p>
           </div>
           <div className="max-h-52 overflow-y-auto">
             {events.map(ev => (

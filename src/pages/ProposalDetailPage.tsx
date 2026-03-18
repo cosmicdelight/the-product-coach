@@ -3,9 +3,10 @@ import { useParams, Link } from 'react-router-dom';
 import { DashboardLayout } from '../components/DashboardLayout';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import { Proposal, ProposalSection, CommentWithProfile, Profile } from '../types/database';
-import { FileText, Edit, MessageSquare, CheckCircle, Clock, ChevronDown, ChevronUp, User, Send } from 'lucide-react';
+import { Proposal, ProposalSection, CommentWithProfile, Profile, EventTemplateWithSections } from '../types/database';
+import { FileText, CreditCard as Edit, MessageSquare, CheckCircle, Clock, ChevronDown, ChevronUp, User, Send } from 'lucide-react';
 import { LastEditedBy } from '../components/proposal/LastEditedBy';
+import { getTemplateForProposal } from '../services/templateService';
 
 export function ProposalDetailPage() {
   const { id } = useParams();
@@ -18,6 +19,7 @@ export function ProposalDetailPage() {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [newComment, setNewComment] = useState('');
   const [posting, setPosting] = useState(false);
+  const [template, setTemplate] = useState<EventTemplateWithSections | null>(null);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -30,6 +32,8 @@ export function ProposalDetailPage() {
       setSections(s || []);
       const { data: c } = await supabase.from('comments').select('*, profile:profiles(*)').eq('proposal_id', id).order('created_at');
       setComments(c || []);
+      const tpl = await getTemplateForProposal(id);
+      setTemplate(tpl);
     } finally {
       setLoading(false);
     }
@@ -56,7 +60,24 @@ export function ProposalDetailPage() {
     setPosting(false);
   };
 
-  const getSectionTitle = (t: string) => t.split('_').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
+  const getSectionTitle = (sectionKey: string) => {
+    if (template) {
+      const ts = template.sections.find(s => s.section_key === sectionKey);
+      if (ts) return ts.title;
+    }
+    return sectionKey.split('_').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
+  };
+
+  const getFieldLabel = (sectionKey: string, fieldKey: string) => {
+    if (template) {
+      const ts = template.sections.find(s => s.section_key === sectionKey);
+      if (ts) {
+        const tf = ts.fields.find(f => f.field_key === fieldKey);
+        if (tf) return tf.label;
+      }
+    }
+    return fieldKey.replace(/([A-Z])/g, ' $1').trim();
+  };
 
   const statusBadge = (status: string) => {
     const map: Record<string, string> = {
@@ -71,7 +92,7 @@ export function ProposalDetailPage() {
   };
 
   if (loading) return <DashboardLayout><div className="flex justify-center py-16"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" /></div></DashboardLayout>;
-  if (!proposal) return <DashboardLayout><div className="text-center py-16"><p className="text-gray-500">Proposal not found.</p><Link to="/dashboard" className="text-blue-600 mt-2 inline-block">Back to Dashboard</Link></div></DashboardLayout>;
+  if (!proposal) return <DashboardLayout><div className="text-center py-16"><p className="text-gray-500">Proposal not found.</p><Link to="/dashboard" className=\"text-blue-600 mt-2 inline-block">Back to Dashboard</Link></div></DashboardLayout>;
 
   const isOwner = user?.id === proposal.user_id;
   const canEdit = isOwner && (proposal.status === 'draft' || proposal.status === 'revision_requested');
@@ -128,7 +149,7 @@ export function ProposalDetailPage() {
                         {Object.entries(sec.content).map(([key, value]) => (
                           <div key={key}>
                             <p className="text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">
-                              {key.replace(/([A-Z])/g, ' $1').trim()}
+                              {getFieldLabel(sec.section_type, key)}
                             </p>
                             <p className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">{value as string}</p>
                           </div>

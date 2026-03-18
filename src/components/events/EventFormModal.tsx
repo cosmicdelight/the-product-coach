@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { Event, EventStatus } from '../../types/database';
 import { captureError, mapErrorToUserMessage } from '../../services/errorHandling';
+import { createDefaultTemplate } from '../../services/templateService';
 
 interface Props {
   event?: Event;
@@ -63,6 +64,7 @@ export function EventFormModal({ event, onClose, onSaved }: Props) {
           .select()
           .single();
         if (err) throw err;
+        await createDefaultTemplate(data.id, user.id);
         onSaved(data);
       }
     } catch (e: unknown) {
