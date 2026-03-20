@@ -6,9 +6,8 @@ import { useDemoTutorial } from './DemoTutorialContext';
 import { captureError, toAppError } from '../services/errorHandling';
 import {
   Proposal, ProposalSection, SectionType,
-  ProposalCollaboratorWithProfile, PresenceUser, EventTemplateWithSections,
+  ProposalCollaboratorWithProfile, PresenceUser,
 } from '../types/database';
-import { getTemplateForEvent } from '../services/templateService';
 
 const PRESENCE_COLORS = [
   '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6',
@@ -35,8 +34,6 @@ interface WizardContextType {
   isCollaborator: boolean;
   collaborators: ProposalCollaboratorWithProfile[];
   presenceList: PresenceUser[];
-  template: EventTemplateWithSections | null;
-  templateLoading: boolean;
   saveSection: (sectionType: SectionType, content: Record<string, string>, completed: boolean) => Promise<void>;
   updateTitle: (title: string) => Promise<void>;
   updateEventId: (eventId: string | null) => Promise<void>;
@@ -74,8 +71,6 @@ export function ProposalWizardProvider({ children }: { children: React.ReactNode
   const [isCollaborator, setIsCollaborator] = useState(false);
   const [collaborators, setCollaborators] = useState<ProposalCollaboratorWithProfile[]>([]);
   const [presenceList, setPresenceList] = useState<PresenceUser[]>([]);
-  const [template, setTemplate] = useState<EventTemplateWithSections | null>(null);
-  const [templateLoading, setTemplateLoading] = useState(false);
   const savedRef = useRef(false);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const proposalRef = useRef<Proposal | null>(null);
@@ -169,13 +164,6 @@ export function ProposalWizardProvider({ children }: { children: React.ReactNode
 
       await loadCollaborators(proposalId);
       setupPresenceChannel(proposalId);
-
-      if (p.event_id) {
-        setTemplateLoading(true);
-        const tpl = await getTemplateForEvent(p.event_id);
-        setTemplate(tpl);
-        setTemplateLoading(false);
-      }
     } catch (e) {
       captureError('proposal', 'load_proposal_failed', e, { proposalId });
     } finally {
@@ -300,19 +288,10 @@ export function ProposalWizardProvider({ children }: { children: React.ReactNode
       throw toAppError(error, 'Unable to update linked event.');
     }
     setProposal(prev => prev ? { ...prev, event_id: eventId } : null);
-    if (eventId) {
-      setTemplateLoading(true);
-      const tpl = await getTemplateForEvent(eventId);
-      setTemplate(tpl);
-      setTemplateLoading(false);
-    } else {
-      setTemplate(null);
-    }
   };
 
   const goToStep = async (step: number) => {
-    const maxStep = template ? template.sections.length : 6;
-    if (!proposal || step < 1 || step > maxStep) return;
+    if (!proposal || step < 1 || step > 6) return;
     const { error } = await supabase.from('proposals').update({ current_step: step }).eq('id', proposal.id);
     if (error) {
       captureError('proposal', 'update_step_failed', error, { proposalId: proposal.id, step });
@@ -332,15 +311,11 @@ export function ProposalWizardProvider({ children }: { children: React.ReactNode
     }
   };
 
-  const maxSteps = template ? template.sections.length : 6;
-  const nextStep = () => { if (currentStep < maxSteps) goToStep(currentStep + 1); };
+  const nextStep = () => { if (currentStep < 6) goToStep(currentStep + 1); };
   const previousStep = () => { if (currentStep > 1) goToStep(currentStep - 1); };
 
   const submitProposal = async () => {
     if (!proposal) return;
-    if (!proposal.event_id) {
-      throw new Error('You must select an event before submitting a proposal.');
-    }
     const { error } = await supabase
       .from('proposals')
       .update({ status: 'submitted', submitted_at: new Date().toISOString() })
@@ -428,8 +403,6 @@ export function ProposalWizardProvider({ children }: { children: React.ReactNode
       isCollaborator,
       collaborators,
       presenceList,
-      template,
-      templateLoading,
       saveSection,
       updateTitle,
       updateEventId,

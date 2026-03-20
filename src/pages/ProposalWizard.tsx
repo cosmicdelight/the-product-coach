@@ -1,20 +1,19 @@
 import { useRef, useCallback, useState, useEffect } from 'react';
 import { ProposalWizardProvider, useWizard } from '../contexts/ProposalWizardContext';
 import { DashboardLayout } from '../components/DashboardLayout';
-import { CheckCircle, Users, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react';
+import { CheckCircle, Users, ChevronDown, ChevronUp } from 'lucide-react';
 import { ProblemIdentificationStep } from '../components/wizard/ProblemIdentificationStep';
 import { ProblemValidationStep } from '../components/wizard/ProblemValidationStep';
 import { UserResearchStep } from '../components/wizard/UserResearchStep';
 import { OpportunityFramingStep } from '../components/wizard/OpportunityFramingStep';
 import { SuccessDefinitionStep } from '../components/wizard/SuccessDefinitionStep';
 import { ExecutiveSummaryStep } from '../components/wizard/ExecutiveSummaryStep';
-import { DynamicSectionStep } from '../components/wizard/DynamicSectionStep';
 import { EventSelector } from '../components/wizard/EventSelector';
 import { AIChatPanel } from '../components/wizard/AIChatPanel';
 import { ProposalCollaboratorsPanel } from '../components/proposal/ProposalCollaboratorsPanel';
 import { SectionType } from '../types/database';
 
-const HARDCODED_STEPS = [
+const STEPS = [
   { number: 1, short: 'Problem', title: 'Problem Identification', sectionKey: 'problem_identification' as SectionType, component: ProblemIdentificationStep },
   { number: 2, short: 'Validate', title: 'Problem Validation', sectionKey: 'problem_validation' as SectionType, component: ProblemValidationStep },
   { number: 3, short: 'Research', title: 'User Research', sectionKey: 'user_research' as SectionType, component: UserResearchStep },
@@ -23,7 +22,7 @@ const HARDCODED_STEPS = [
   { number: 6, short: 'Summary', title: 'Executive Summary', sectionKey: 'executive_summary' as SectionType, component: ExecutiveSummaryStep },
 ];
 
-function getFieldValues(sectionKey: string, sections: Record<string, { content?: Record<string, string> }>): Record<string, string> {
+function getFieldValues(sectionKey: SectionType, sections: Record<string, { content?: Record<string, string> }>): Record<string, string> {
   const content = sections[sectionKey]?.content ?? {};
   return Object.fromEntries(
     Object.entries(content).map(([k, v]) => [k, typeof v === 'string' ? v : ''])
@@ -35,7 +34,7 @@ function getInitials(name: string): string {
 }
 
 function WizardContent() {
-  const { currentStep, sections, goToStep, proposal, loading, templateLoading, template, collaborators, presenceList } = useWizard();
+  const { currentStep, sections, goToStep, proposal, loading, collaborators, presenceList } = useWizard();
   const getFeedbackFnRef = useRef<(() => void) | null>(null);
   const liveFieldValuesRef = useRef<Record<string, string>>({});
   const [liveFieldValues, setLiveFieldValues] = useState<Record<string, string>>({});
@@ -59,17 +58,7 @@ function WizardContent() {
     setLiveFieldValues({});
   }, [currentStep]);
 
-  const steps = template
-    ? template.sections.map((s, i) => ({
-        number: i + 1,
-        short: s.title.split(' ')[0],
-        title: s.title,
-        sectionKey: s.section_key,
-        fields: s.fields,
-      }))
-    : HARDCODED_STEPS.map(s => ({ ...s, fields: [] }));
-
-  if (loading || templateLoading) {
+  if (loading) {
     return (
       <DashboardLayout>
         <div className="flex justify-center items-center py-24">
@@ -79,36 +68,15 @@ function WizardContent() {
     );
   }
 
-  const currentStepConfig = steps[currentStep - 1] ?? steps[0];
+  const currentStepConfig = STEPS[currentStep - 1];
+  const CurrentStep = currentStepConfig.component;
   const currentSectionKey = currentStepConfig.sectionKey;
-  const completedCount = steps.filter(s => sections[s.sectionKey]?.completed).length;
+  const completedCount = STEPS.filter(s => sections[s.sectionKey]?.completed).length;
   const savedFieldValues = getFieldValues(currentSectionKey, sections);
   const fieldValues = Object.keys(liveFieldValues).length > 0 ? liveFieldValues : savedFieldValues;
 
   const activeCollaborators = collaborators.filter(c => c.status === 'active');
   const hasTeam = activeCollaborators.length > 0 || collaborators.filter(c => c.status === 'pending').length > 0;
-
-  const hasNoEvent = !proposal?.event_id;
-
-  const renderCurrentStep = () => {
-    if (template) {
-      const templateSection = template.sections[currentStep - 1];
-      if (!templateSection) return null;
-      return (
-        <DynamicSectionStep
-          sectionKey={templateSection.section_key}
-          fields={templateSection.fields}
-          onGetFeedback={handleGetFeedback}
-          onFieldsChange={handleFieldsChange}
-        />
-      );
-    }
-
-    const hardcodedStep = HARDCODED_STEPS[currentStep - 1];
-    if (!hardcodedStep) return null;
-    const StepComponent = hardcodedStep.component;
-    return <StepComponent onGetFeedback={handleGetFeedback} onFieldsChange={handleFieldsChange} />;
-  };
 
   return (
     <DashboardLayout>
@@ -140,7 +108,7 @@ function WizardContent() {
                 </div>
               )}
               <span className="text-sm text-gray-500">
-                {completedCount}/{steps.length} sections complete
+                {completedCount}/6 sections complete
               </span>
             </div>
           </div>
@@ -149,17 +117,10 @@ function WizardContent() {
             <EventSelector />
           </div>
 
-          {hasNoEvent && (
-            <div className="mb-3 flex items-center gap-2.5 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 text-sm text-amber-700">
-              <AlertTriangle className="h-4 w-4 flex-shrink-0 text-amber-500" />
-              <span>Select an event above to submit your proposal. An event is required before submission.</span>
-            </div>
-          )}
-
           <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
             <div
               className="h-full bg-blue-600 rounded-full transition-all duration-500"
-              style={{ width: `${steps.length > 0 ? (completedCount / steps.length) * 100 : 0}%` }}
+              style={{ width: `${(completedCount / 6) * 100}%` }}
             />
           </div>
         </div>
@@ -174,7 +135,7 @@ function WizardContent() {
         )}
 
         <div className="flex gap-1 mb-4 overflow-x-auto pb-1">
-          {steps.map(step => {
+          {STEPS.map(step => {
             const isCompleted = sections[step.sectionKey]?.completed;
             const isCurrent = currentStep === step.number;
             const isAccessible = step.number <= currentStep;
@@ -224,7 +185,7 @@ function WizardContent() {
 
         <div className="flex gap-4 min-h-0 flex-1">
           <div className="flex-1 min-w-0 bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8 overflow-y-auto">
-            {renderCurrentStep()}
+            <CurrentStep onGetFeedback={handleGetFeedback} onFieldsChange={handleFieldsChange} />
           </div>
 
           <div className="hidden lg:flex flex-col gap-3 w-80 xl:w-96 flex-shrink-0">
@@ -262,10 +223,9 @@ function WizardContent() {
             <div className="flex-1 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden" style={{ minHeight: '500px', maxHeight: 'calc(100vh - 280px)' }}>
               <AIChatPanel
                 proposalId={proposal?.id ?? null}
-                sectionType={currentSectionKey as SectionType}
+                sectionType={currentSectionKey}
                 fieldValues={fieldValues}
                 onGetFeedbackRef={handleGetFeedbackRef}
-                templateFields={template ? (template.sections[currentStep - 1]?.fields ?? []) : []}
               />
             </div>
           </div>

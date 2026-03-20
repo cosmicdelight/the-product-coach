@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Send, ThumbsUp, ThumbsDown, Sparkles, Trash2, MessageSquare, Loader } from 'lucide-react';
 import { TutorialTarget } from '../tutorial/TutorialTarget';
-import { SectionType, TemplateField } from '../../types/database';
+import { SectionType } from '../../types/database';
 import { ChatMessage, ChatMessageContent, FieldSnapshot } from '../../types/chat';
 import { SECTION_CHAT_CONFIG } from '../../config/sectionChatConfig';
 import { getFeedbackForSection, buildFeedbackFromResult, buildFollowUpFromResult, getChatReply } from '../../services/aiService';
@@ -133,10 +133,9 @@ interface Props {
   sectionType: SectionType;
   fieldValues: Record<string, string>;
   onGetFeedbackRef?: (fn: () => void) => void;
-  templateFields?: TemplateField[];
 }
 
-export function AIChatPanel({ proposalId, sectionType, fieldValues, onGetFeedbackRef, templateFields = [] }: Props) {
+export function AIChatPanel({ proposalId, sectionType, fieldValues, onGetFeedbackRef }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -148,23 +147,8 @@ export function AIChatPanel({ proposalId, sectionType, fieldValues, onGetFeedbac
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const prevSectionRef = useRef<SectionType | null>(null);
 
-  const hasTemplateFields = templateFields.length > 0;
-  const config = SECTION_CHAT_CONFIG[sectionType] ?? SECTION_CHAT_CONFIG['problem_identification'];
-  const sectionLabel = hasTemplateFields
-    ? (templateFields[0] ? templateFields.map(f => f.label).slice(0, 1).join('') : SECTION_LABELS[sectionType] ?? sectionType)
-    : (SECTION_LABELS[sectionType] ?? sectionType);
-
-  const effectiveSectionLabel = hasTemplateFields
-    ? (SECTION_LABELS[sectionType] ?? sectionType)
-    : SECTION_LABELS[sectionType];
-
-  const welcomeMessage = hasTemplateFields
-    ? `I'm your AI coach for this section. Fill in the fields and click **Get Feedback** — I'll review your inputs and suggest improvements.`
-    : config.welcomeMessage;
-
-  const effectiveFieldLabels = hasTemplateFields
-    ? Object.fromEntries(templateFields.map(f => [f.field_key, f.label]))
-    : config.fieldLabels;
+  const config = SECTION_CHAT_CONFIG[sectionType];
+  const sectionLabel = SECTION_LABELS[sectionType];
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 60);
@@ -197,10 +181,10 @@ export function AIChatPanel({ proposalId, sectionType, fieldValues, onGetFeedbac
       setMessages(history);
 
       if (history.length === 0) {
-        const welcomeMsg = makeLocalMessage('assistant', { type: 'text', text: welcomeMessage });
+        const welcomeMsg = makeLocalMessage('assistant', { type: 'text', text: config.welcomeMessage });
         addLocalMessage(welcomeMsg);
         if (proposalId) {
-          const saved = await saveChatMessage(proposalId, sectionType, 'assistant', { type: 'text', text: welcomeMessage });
+          const saved = await saveChatMessage(proposalId, sectionType, 'assistant', { type: 'text', text: config.welcomeMessage });
           if (saved) {
             setMessages(prev => prev.map(m => m.id === welcomeMsg.id ? saved : m));
           }
@@ -216,10 +200,10 @@ export function AIChatPanel({ proposalId, sectionType, fieldValues, onGetFeedbac
 
   useEffect(() => {
     if (prevSectionRef.current && prevSectionRef.current !== sectionType && initialized) {
-      const greeting = makeLocalMessage('assistant', { type: 'text', text: welcomeMessage });
+      const greeting = makeLocalMessage('assistant', { type: 'text', text: config.welcomeMessage });
       addLocalMessage(greeting);
       if (proposalId) {
-        saveChatMessage(proposalId, sectionType, 'assistant', { type: 'text', text: welcomeMessage }).then(saved => {
+        saveChatMessage(proposalId, sectionType, 'assistant', { type: 'text', text: config.welcomeMessage }).then(saved => {
           if (saved) setMessages(prev => prev.map(m => m.id === greeting.id ? saved : m));
         });
       }
@@ -255,7 +239,8 @@ export function AIChatPanel({ proposalId, sectionType, fieldValues, onGetFeedbac
     await new Promise(resolve => setTimeout(resolve, 400));
 
     const snapshotTime = formatTime(new Date().toISOString());
-    const snapshot: FieldSnapshot[] = Object.entries(effectiveFieldLabels)
+    const fieldLabels = config.fieldLabels;
+    const snapshot: FieldSnapshot[] = Object.entries(fieldLabels)
       .map(([key, label]) => ({ label, value: fieldValues[key] ?? '' }))
       .filter(f => f.value.trim().length > 0);
 
@@ -335,13 +320,13 @@ export function AIChatPanel({ proposalId, sectionType, fieldValues, onGetFeedbac
     setShowClearConfirm(false);
     setMessages([]);
     if (proposalId) await clearChatMessages(proposalId, sectionType);
-    const welcomeMsg = makeLocalMessage('assistant', { type: 'text', text: welcomeMessage });
+    const welcomeMsg = makeLocalMessage('assistant', { type: 'text', text: config.welcomeMessage });
     addLocalMessage(welcomeMsg);
     if (proposalId) {
-      const saved = await saveChatMessage(proposalId, sectionType, 'assistant', { type: 'text', text: welcomeMessage });
+      const saved = await saveChatMessage(proposalId, sectionType, 'assistant', { type: 'text', text: config.welcomeMessage });
       if (saved) setMessages(prev => prev.map(m => m.id === welcomeMsg.id ? saved : m));
     }
-  }, [proposalId, sectionType, welcomeMessage]);
+  }, [proposalId, sectionType, config]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -359,7 +344,7 @@ export function AIChatPanel({ proposalId, sectionType, fieldValues, onGetFeedbac
           </div>
           <div>
             <p className="text-xs font-semibold text-gray-900">AI Coach</p>
-            <p className="text-xs text-blue-600 font-medium leading-none mt-0.5">{effectiveSectionLabel}</p>
+            <p className="text-xs text-blue-600 font-medium leading-none mt-0.5">{sectionLabel}</p>
           </div>
         </div>
         <button
@@ -414,7 +399,7 @@ export function AIChatPanel({ proposalId, sectionType, fieldValues, onGetFeedbac
           <MessageBubble
             key={msg.id}
             message={{ ...msg, rating: ratedIds[msg.id] ?? msg.rating }}
-            sectionLabel={effectiveSectionLabel}
+            sectionLabel={sectionLabel}
             onRate={handleRate}
           />
         ))}

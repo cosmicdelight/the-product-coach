@@ -4,111 +4,52 @@ AI-powered proposal coach for public officers.
 
 This app helps teams draft, review, and collaborate on structured innovation proposals.
 
-**Disclaimer:** The concept was developed as part of a group project for the Practice Module for Designing and Managing Products and Platforms at NUS-ISS. This prototype was built after the module and is not an official product of the Singapore government.
+## Quick Start
 
-**Built with Vite + React + TypeScript** · [Live demo](https://productcoach.bolt.host/) · [GitHub](https://github.com/cosmicdelight/the-product-coach)
+### 1) Clone and install
 
----
-
-## What it does
-
-- **Draft structured proposals** — guided wizard for building innovation proposals end-to-end.
-- **AI Innovation Coach (conversational side panel)** — persistent chat panel docked to the proposal workflow for real-time, section-specific guidance (in the proposal wizard on larger screens).
-- **Section-level “Get Feedback”** — trigger targeted feedback on any section/field and iterate in-chat with clarifying follow-ups.
-- **Snapshot cards + audit trail** — timestamped draft excerpts and structured feedback captured in a persistent chat history.
-- **Prompt chips + usefulness ratings** — quick prompts (e.g. “Suggest improvements”) and a simple helpful/not helpful rating to improve relevance over time.
-- **Collaboration + review workflow** — invite collaborators and manage review/comments and revision loops.
-
----
-
-## Tech stack
-
-
-| Layer    | Stack                                                                            |
-| -------- | -------------------------------------------------------------------------------- |
-| Frontend | React 18, TypeScript, Vite, React Router                                         |
-| UI       | Tailwind CSS, Lucide icons                                                       |
-| Backend  | Supabase (Auth, Postgres, Edge Functions) or Bolt Database (Supabase-compatible) |
-| AI       | Edge Function proxy (`supabase/functions/ai-proxy`)                              |
-| Tests    | Vitest                                                                           |
-
-
----
-
-## Live demo
-
-**[productcoach.bolt.host](https://productcoach.bolt.host/)**
-
----
-
-## Getting started
-
-1. **Clone the repo**
-
-```bash
+```sh
 git clone https://github.com/cosmicdelight/the-product-coach.git
 cd the-product-coach
+npm install
 ```
 
-1. **Set up environment variables**
+### 2) Configure environment
 
 Create a `.env` file in the repository root:
 
-```bash
+```sh
 VITE_SUPABASE_URL="https://your-project.supabase.co"
 VITE_SUPABASE_ANON_KEY="your-anon-key"
 ```
 
-- **Bolt Database**: these env vars are typically set automatically by Bolt hosting; for local dev, copy your Bolt project's URL and anon key from the Database settings.
-- **Supabase**: use your project's URL + anon key from Supabase project settings.
+### 3) Run locally
 
-1. **Install and run**
-
-```bash
-npm install
+```sh
 npm run dev
 ```
 
-1. **(Optional) Configure edge function secrets**
+Open the URL shown in terminal (typically `http://localhost:5173`).
 
-AI requests are intended to go through the `ai-proxy` edge function in `supabase/functions/ai-proxy`. Store `OPENAI_API_KEY` (and any other privileged credentials) as server-side secrets where the edge function runs.
+## Available Scripts
 
----
+- `npm run dev` - Start local dev server.
+- `npm run typecheck` - Run TypeScript checks (no emit).
+- `npm run lint` - Run ESLint.
+- `npm test` - Run unit tests once via Vitest.
+- `npm run test:watch` - Run Vitest in watch mode.
+- `npm run build` - Build production bundle.
+- `npm run preview` - Serve production build locally.
 
-## Project structure
+## Environment and Security Rules
 
-- `src/pages` — Top-level route pages
-- `src/components` — UI components (including wizard and collaborator panels)
-- `src/contexts` — Shared app state (`AuthContext`, `ProposalWizardContext`)
-- `src/services` — Domain services (AI logic, error handling utilities)
-- `src/lib` — Client setup utilities (for example Supabase client wiring)
-- `supabase/migrations` — Database migrations
-- `supabase/seeds` — Seeds (including Bolt demo seed)
-
----
-
-## Scripts
-
-- `npm run dev` — Start local dev server
-- `npm run typecheck` — Run TypeScript checks (no emit)
-- `npm run lint` — Run ESLint
-- `npm test` — Run unit tests once via Vitest (uses placeholder env vars)
-- `npm run test:watch` — Run Vitest in watch mode (uses placeholder env vars)
-- `npm run build` — Build production bundle
-- `npm run preview` — Serve production build locally
-
----
-
-## Environment and security rules
-
-- Never place secrets in `VITE_`* variables.
+- Never place secrets in `VITE_*` variables.
 - `VITE_*` variables are bundled client-side and are public at runtime.
 - Only use `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in frontend.
 - Any AI or privileged API keys must be handled server-side.
+- Configure `OPENAI_API_KEY` as a secret in Supabase Edge Functions (for `ai-proxy`).
 
----
-
-## CI quality gate
+## CI Quality Gate
 
 The repository enforces a CI workflow on push/PR to `main`:
 
@@ -118,19 +59,27 @@ The repository enforces a CI workflow on push/PR to `main`:
 4. `npm test`
 5. `npm run build`
 
----
+## Architecture Overview
+
+- `src/pages` - Top-level route pages.
+- `src/components` - UI components (including wizard and collaborator panels).
+- `src/contexts` - Shared app state (`AuthContext`, `ProposalWizardContext`).
+- `src/services` - Domain services (AI logic, error handling utilities).
+- `src/lib` - Client setup utilities (for example Supabase client wiring).
+- `.github/workflows/ci.yml` - CI checks and merge gate pipeline.
 
 ## Troubleshooting
 
-- **Missing env vars**: ensure `.env` exists and `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` are set.
-- **Auth/profile issues**: confirm database tables and RLS policies are configured as expected (Bolt Database or Supabase).
-- **Lint warnings**: current known warnings are tracked in `KNOWN_RISKS.md`.
-- **Build chunk warning**: bundle-size warning exists; use code-splitting when optimizing performance.
+- Missing env vars:
+  - Ensure `.env` exists and `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` are set.
+- Auth/profile issues:
+  - Confirm Supabase tables and RLS policies are configured as expected.
+- Lint warnings:
+  - Current known warnings are tracked in `KNOWN_RISKS.md`.
+- Build chunk warning:
+  - Bundle-size warning exists; use code-splitting when optimizing performance.
 
----
-
-## Handoff docs
+## Handoff Docs
 
 - Contribution expectations: `CONTRIBUTING.md`
 - Known risks with owners and dates: `KNOWN_RISKS.md`
-

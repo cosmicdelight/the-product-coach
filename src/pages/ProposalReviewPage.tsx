@@ -3,8 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { DashboardLayout } from '../components/DashboardLayout';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import { Proposal, ProposalSection, Profile, EventTemplateWithSections } from '../types/database';
-import { getTemplateForProposal } from '../services/templateService';
+import { Proposal, ProposalSection, Profile } from '../types/database';
 import {
   AlertCircle, TrendingUp, ChevronDown, ChevronUp, ArrowLeft,
   UserCheck, UserX, AlertTriangle,
@@ -26,7 +25,6 @@ export function ProposalReviewPage() {
   const [revisionModal, setRevisionModal] = useState(false);
   const [revisionNotes, setRevisionNotes] = useState('');
   const [unassignModal, setUnassignModal] = useState(false);
-  const [template, setTemplate] = useState<EventTemplateWithSections | null>(null);
 
   const [overallScore, setOverallScore] = useState(75);
   const [feasibilityScore, setFeasibilityScore] = useState(75);
@@ -60,8 +58,6 @@ export function ProposalReviewPage() {
         if (existingReview.innovation_score != null) setInnovationScore(existingReview.innovation_score);
         if (existingReview.review_notes) setReviewNotes(existingReview.review_notes);
       }
-      const tpl = await getTemplateForProposal(id);
-      setTemplate(tpl);
     } finally {
       setLoading(false);
     }
@@ -174,24 +170,7 @@ export function ProposalReviewPage() {
     });
   };
 
-  const getSectionTitle = (sectionKey: string) => {
-    if (template) {
-      const ts = template.sections.find(s => s.section_key === sectionKey);
-      if (ts) return ts.title;
-    }
-    return sectionKey.split('_').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
-  };
-
-  const getFieldLabel = (sectionKey: string, fieldKey: string) => {
-    if (template) {
-      const ts = template.sections.find(s => s.section_key === sectionKey);
-      if (ts) {
-        const tf = ts.fields.find(f => f.field_key === fieldKey);
-        if (tf) return tf.label;
-      }
-    }
-    return fieldKey.replace(/([A-Z])/g, ' $1').trim();
-  };
+  const getSectionTitle = (t: string) => t.split('_').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
   const avgScore = Math.round((overallScore + feasibilityScore + impactScore + innovationScore) / 4);
 
   if (loading) return (
@@ -309,7 +288,7 @@ export function ProposalReviewPage() {
                     <div className="px-5 pb-5 bg-gray-50 space-y-3">
                       {Object.entries(sec.content).map(([key, value]) => (
                         <div key={key}>
-                          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-0.5">{getFieldLabel(sec.section_type, key)}</p>
+                          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-0.5">{key.replace(/([A-Z])/g, ' $1').trim()}</p>
                           <p className="text-sm text-gray-800 whitespace-pre-wrap">{value as string}</p>
                         </div>
                       ))}
